@@ -1,8 +1,9 @@
 package com.owesome.ui.groups
 
 import androidx.lifecycle.ViewModel
+import com.owesome.data.repository.GroupRepository
 
-class GroupViewModel(): ViewModel() {
+class GroupViewModel(private val repository: GroupRepository): ViewModel() {
     fun getText(): String {
         return "Group View Model";
     }
