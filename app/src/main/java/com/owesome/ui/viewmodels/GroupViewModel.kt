@@ -1,4 +1,4 @@
-package com.owesome.ui.groups
+package com.owesome.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.owesome.data.repository.GroupRepository

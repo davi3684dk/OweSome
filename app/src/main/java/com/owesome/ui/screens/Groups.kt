@@ -1,7 +1,8 @@
-package com.owesome.ui.groups
+package com.owesome.ui.screens
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.owesome.ui.viewmodels.GroupViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
