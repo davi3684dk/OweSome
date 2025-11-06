@@ -12,6 +12,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.owesome.di.appModule
 import com.owesome.ui.groups.GroupViewModel
 import com.owesome.ui.groups.Groups
@@ -34,13 +37,31 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            OweSomeTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Surface(modifier = Modifier.padding(innerPadding)) {
-                        Groups()
-                    }
+            OweSome()
+        }
+    }
+}
+
+@Composable
+fun OweSome() {
+    val navController = rememberNavController()
+
+    OweSomeTheme {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            Surface(modifier = Modifier.padding(innerPadding)) {
+                NavHost(
+                    navController = navController,
+                    startDestination = Screen.Groups.name
+                ) {
+                    composable(Screen.Groups.name) { Groups() }
                 }
             }
         }
     }
+}
+
+enum class Screen {
+    Groups,
+    Profile,
+    Settings
 }
