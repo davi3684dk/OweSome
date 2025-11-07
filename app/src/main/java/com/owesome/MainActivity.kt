@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
@@ -30,8 +32,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -75,7 +83,10 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
 
     viewModel.setTitle("Test")
 
-    OweSomeTheme {
+    OweSomeTheme(
+        darkTheme = true,
+        dynamicColor = false
+    ) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
@@ -95,6 +106,15 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
                             }
                         }
                     },
+                    modifier = Modifier.dropShadow(
+                        shape = RoundedCornerShape(0.dp),
+                        shadow = Shadow(
+                            radius = 6.dp,
+                            spread = 6.dp,
+                            color = Color(0x40000000),
+                            offset = DpOffset(x = 0.dp, 4.dp)
+                        )
+                    )
                 )
             },
             bottomBar = {
@@ -155,9 +175,5 @@ sealed class Screen(
 
     object GroupDetails : Screen("groupDetails/{groupId}", null) {
         fun createRoute(groupId: Int) = "groupDetails/$groupId"
-    }
-
-    companion object {
-        val bottomNavScreens = listOf(Groups, Profile)
     }
 }
