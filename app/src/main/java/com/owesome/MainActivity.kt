@@ -7,10 +7,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
@@ -18,20 +22,30 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.owesome.di.appModule
 import com.owesome.ui.screens.Groups
+import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.theme.OweSomeTheme
+import com.owesome.ui.viewmodels.NavViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
+import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinActivityViewModel
 import org.koin.core.context.startKoin
 
 class MainActivity : ComponentActivity() {
@@ -51,44 +65,68 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OweSome() {
+fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
     val navController = rememberNavController()
-    var selectedDestination by rememberSaveable { mutableIntStateOf(Screen.GROUPS.ordinal) }
+    var selectedDestination by rememberSaveable { mutableStateOf(Screen.Groups.route) }
+
+    val headerTitle by viewModel.title.collectAsState()
+
+    viewModel.setTitle("Test")
 
     OweSomeTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            headerTitle
+                        )
+                    },
+                    navigationIcon = {
+                        if (navController.previousBackStackEntry != null) {
+                            IconButton(onClick = {navController.popBackStack()}) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Localized description"
+                                )
+                            }
+                        }
+                    },
+                )
+            },
             bottomBar = {
                 NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
                     NavigationBarItem(
-                        selected = selectedDestination == Screen.GROUPS.ordinal,
+                        selected = selectedDestination == Screen.Groups.route,
                         onClick = {
-                            navController.navigate(route = Screen.GROUPS.route)
-                            selectedDestination = Screen.GROUPS.ordinal
+                            navController.navigate(route = Screen.Groups.route)
+                            selectedDestination = Screen.Groups.route
                         },
                         icon = {
                             Icon(
                                 Icons.Default.Groups,
-                                contentDescription = Screen.GROUPS.route
+                                contentDescription = Screen.Groups.route
                             )
                         },
-                        label = { Text(Screen.GROUPS.label) }
+                        label = { Screen.Groups.label?.let { Text(it) } }
                     )
 
                     NavigationBarItem(
-                        selected = selectedDestination == Screen.PROFILE.ordinal,
+                        selected = selectedDestination == Screen.Profile.route,
                         onClick = {
-                            navController.navigate(route = Screen.PROFILE.route)
-                            selectedDestination = Screen.PROFILE.ordinal
+                            navController.navigate(route = Screen.Profile.route)
+                            selectedDestination = Screen.Profile.route
                         },
                         icon = {
                             Icon(
                                 Icons.Default.AccountCircle,
-                                contentDescription = Screen.PROFILE.route
+                                contentDescription = Screen.Profile.route
                             )
                         },
-                        label = { Text(Screen.PROFILE.label) }
+                        label = { Screen.Profile.label?.let { Text(it) } }
                     )
                 }
             }
@@ -96,16 +134,10 @@ fun OweSome() {
             Surface(modifier = Modifier.padding(innerPadding)) {
                 NavHost(
                     navController = navController,
-                    startDestination = Screen.GROUPS.route
+                    startDestination = Screen.Groups.route
                 ) {
-                    Screen.entries.forEach { screen ->
-                        composable(screen.route) {
-                            when (screen) {
-                                Screen.GROUPS -> Groups()
-                                Screen.PROFILE -> TODO()
-                                Screen.SETTINGS -> TODO()
-                            }
-                        }
+                    composable(Screen.Groups.route) {
+                        GroupsScreen(navigation = navController)
                     }
                 }
             }
@@ -113,11 +145,19 @@ fun OweSome() {
     }
 }
 
-enum class Screen(
+sealed class Screen(
     val route: String,
-    val label: String,
+    val label: String?,
 ) {
-    GROUPS("groups", "Groups"),
-    PROFILE("profile", "Profile"),
-    SETTINGS("settings", "Settings"),
+    object Groups : Screen("groups", "Groups")
+    object Profile : Screen("profile", "Profile")
+    object Settings : Screen("settings", "Settings")
+
+    object GroupDetails : Screen("groupDetails/{groupId}", null) {
+        fun createRoute(groupId: Int) = "groupDetails/$groupId"
+    }
+
+    companion object {
+        val bottomNavScreens = listOf(Groups, Profile)
+    }
 }
