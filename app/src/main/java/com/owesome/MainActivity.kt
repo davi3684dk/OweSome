@@ -26,9 +26,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -44,9 +46,10 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.owesome.di.appModule
-import com.owesome.ui.screens.Groups
+import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
@@ -77,11 +80,10 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
     val navController = rememberNavController()
+
     var selectedDestination by rememberSaveable { mutableStateOf(Screen.Groups.route) }
 
     val headerTitle by viewModel.title.collectAsState()
-
-    viewModel.setTitle("Test")
 
     OweSomeTheme(
         darkTheme = true,
@@ -97,16 +99,14 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
                         )
                     },
                     navigationIcon = {
-                        if (navController.previousBackStackEntry != null) {
-                            IconButton(onClick = {navController.popBackStack()}) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Localized description"
-                                )
-                            }
+                        IconButton(onClick = {navController.popBackStack()}) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Localized description"
+                            )
                         }
                     },
-                    modifier = Modifier.dropShadow(
+                    /*modifier = Modifier.dropShadow(
                         shape = RoundedCornerShape(0.dp),
                         shadow = Shadow(
                             radius = 6.dp,
@@ -114,7 +114,7 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
                             color = Color(0x40000000),
                             offset = DpOffset(x = 0.dp, 4.dp)
                         )
-                    )
+                    )*/
                 )
             },
             bottomBar = {
@@ -158,6 +158,15 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
                 ) {
                     composable(Screen.Groups.route) {
                         GroupsScreen(navigation = navController)
+                    }
+
+                    composable(
+                        Screen.GroupDetails.route
+                    ) { backStackEntry ->
+                        val groupId = backStackEntry.arguments?.getString("groupId")
+                        groupId?.let {id ->
+                            GroupScreen(groupId = id)
+                        }
                     }
                 }
             }
