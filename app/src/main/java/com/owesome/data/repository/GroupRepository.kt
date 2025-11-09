@@ -1,5 +1,7 @@
 package com.owesome.data.repository
 
+import com.owesome.data.api.GroupApiService
+import com.owesome.data.api.RetroFitClient
 import com.owesome.data.entities.Expense
 import com.owesome.data.entities.ExpenseCreate
 import com.owesome.data.entities.ExpenseShare
@@ -18,8 +20,15 @@ interface GroupRepository {
     suspend fun addExpense(expense: ExpenseCreate)
 }
 
-class GroupRepositoryImpl : GroupRepository {
+class GroupRepositoryImpl(private val groupApiService: GroupApiService) : GroupRepository {
     override suspend fun getGroup(groupId: String): Group {
+        try {
+            val call = groupApiService.getGroups()
+            println(call)
+        } catch (e: Exception) {
+
+        }
+
         delay(200)
 
         val u1 = User(
