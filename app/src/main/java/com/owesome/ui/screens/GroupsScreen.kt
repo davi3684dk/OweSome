@@ -21,6 +21,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +40,8 @@ fun GroupsScreen(
     navViewModel: NavViewModel = koinActivityViewModel(),
     navigation: NavController
 ) {
+    val groups by viewModel.groups.collectAsState()
+
     LaunchedEffect(Unit) {
         println(navViewModel.title.value)
         navViewModel.setTitle("Groups")
@@ -52,7 +56,7 @@ fun GroupsScreen(
             modifier = Modifier.padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            for (group in viewModel.getAllGroups()) {
+            for (group in groups) {
                 Card(
                     onClick = {
                         navigation.navigate(Screen.GroupDetails.createRoute(group.id))

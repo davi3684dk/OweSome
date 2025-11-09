@@ -1,19 +1,12 @@
 package com.owesome.data.api
 
-import android.content.Context
 import com.owesome.BuildConfig
 import com.owesome.data.auth.AuthManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
 import okhttp3.Authenticator
 import okhttp3.Interceptor
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.Route
 import retrofit2.HttpException
 import retrofit2.Retrofit
@@ -36,7 +29,7 @@ class RetroFitClient(authManager: AuthManager) {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
-        val refreshService = refreshRetrofit.create(RefreshApiService::class.java)
+        val refreshService = refreshRetrofit.create(AuthApiService::class.java)
 
         val okHttpClient = OkHttpClient.Builder()
             .addInterceptor(RetryInterceptor(10))
@@ -53,6 +46,10 @@ class RetroFitClient(authManager: AuthManager) {
 
     val groupApi: GroupApiService by lazy {
         retrofit.create(GroupApiService::class.java)
+    }
+
+    val authApi: AuthApiService by lazy {
+        retrofit.create(AuthApiService::class.java)
     }
 }
 
@@ -86,7 +83,7 @@ class AccessTokenInterceptor(private val authManager: AuthManager): Interceptor 
 
 class TokenAuthenticator(
     private val authManager: AuthManager,
-    private val refreshService: RefreshApiService
+    private val refreshService: AuthApiService
 ): Authenticator {
     override fun authenticate(route: Route?, response: Response): Request? {
         val refreshResponse = refreshService.refreshToken().execute()

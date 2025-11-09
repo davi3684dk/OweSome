@@ -18,5 +18,6 @@ val appModule = module {
     singleOf(::RetroFitClient)
     singleOf(::GroupRepositoryImpl) bind GroupRepository::class
     single { get<RetroFitClient>().groupApi }
+    single { get<RetroFitClient>().authApi }
     viewModel { NavViewModel() }
 }
