@@ -7,6 +7,7 @@ plugins {
 android {
     namespace = "com.owesome"
     compileSdk = 36
+    buildFeatures.buildConfig = true
 
     defaultConfig {
         applicationId = "com.owesome"
@@ -21,10 +22,15 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            buildConfigField("String", "BACKEND_URL", "\"http://192.168.0.108:3001\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+
+        debug {
+            buildConfigField("String", "BACKEND_URL", "\"http://192.168.0.108:3001\"")
         }
     }
     compileOptions {

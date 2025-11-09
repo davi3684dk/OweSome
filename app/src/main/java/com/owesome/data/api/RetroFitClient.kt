@@ -1,6 +1,7 @@
 package com.owesome.data.api
 
 import android.content.Context
+import com.owesome.BuildConfig
 import com.owesome.data.auth.AuthManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,7 @@ import java.net.ConnectException
 class RetroFitClient(authManager: AuthManager) {
 
     private val retrofit by lazy {
+        val baseUrl = BuildConfig.BACKEND_URL
 
         val refreshOkHttpClient = OkHttpClient.Builder()
             .addInterceptor(RetryInterceptor(10))
@@ -29,7 +31,7 @@ class RetroFitClient(authManager: AuthManager) {
             .build()
 
         val refreshRetrofit = Retrofit.Builder()
-            .baseUrl("http://192.168.0.108:3001")
+            .baseUrl(baseUrl)
             .client(refreshOkHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -43,7 +45,7 @@ class RetroFitClient(authManager: AuthManager) {
             .build()
 
         Retrofit.Builder()
-            .baseUrl("http://192.168.0.108:3001")
+            .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
