@@ -172,10 +172,6 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
                         },
                         label = { Screen.Profile.label?.let { Text(it) } }
                     )
-                    Button(
-                        onClick = { notificationFacade.sendNotification ("test text", "test title") },
-                        content = { Text("jajajaj") }
-                    )
 
 
                 }
