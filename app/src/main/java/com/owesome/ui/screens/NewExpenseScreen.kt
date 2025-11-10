@@ -32,7 +32,7 @@ import com.owesome.ui.viewmodels.NavViewModel
 import org.koin.compose.viewmodel.koinActivityViewModel
 
 @Composable
-fun ExpenseScreen(
+fun NewExpenseScreen(
     viewModel: GroupViewModel = koinActivityViewModel(),
     navViewModel: NavViewModel = koinActivityViewModel(),
     navigation: NavController
@@ -71,7 +71,7 @@ fun ExpenseScreen(
         )
         ExtendedFloatingActionButton(
             onClick = {
-                navigation.navigate(Screen.NewExpense.route)
+                navigation.navigate(Screen.EditExpense.route)
             },
             icon = { Icon(Icons.Filled.DoubleArrow, "Floating action button.") },
             text = { Text(text = "Next")},

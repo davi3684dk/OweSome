@@ -49,7 +49,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.owesome.di.appModule
-import com.owesome.ui.screens.ExpenseScreen
+import com.owesome.ui.screens.EditExpenseScreen
+import com.owesome.ui.screens.NewExpenseScreen
 import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.theme.OweSomeTheme
@@ -172,8 +173,12 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
 
                     composable(Screen.NewExpense.route
                     ) {
-                        ExpenseScreen(navigation = navController)
+                        NewExpenseScreen(navigation = navController)
                     }
+
+                    composable(
+                        Screen.EditExpense.route
+                    ) { EditExpenseScreen(navigation = navController) }
                 }
             }
         }
@@ -188,7 +193,7 @@ sealed class Screen(
     object Profile : Screen("profile", "Profile")
     object Settings : Screen("settings", "Settings")
     object NewExpense : Screen("newExpense", null)
-
+    object EditExpense : Screen("editExpense", null)
     object GroupDetails : Screen("groupDetails/{groupId}", null) {
         fun createRoute(groupId: Int) = "groupDetails/$groupId"
     }
