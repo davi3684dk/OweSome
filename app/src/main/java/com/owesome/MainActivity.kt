@@ -49,6 +49,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.owesome.di.appModule
+import com.owesome.ui.screens.CreateGroupScreen
 import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.theme.OweSomeTheme
@@ -168,6 +169,10 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
                             GroupScreen(groupId = id)
                         }
                     }
+
+                    composable(Screen.CreateGroup.route) {
+                        CreateGroupScreen()
+                    }
                 }
             }
         }
@@ -181,6 +186,7 @@ sealed class Screen(
     object Groups : Screen("groups", "Groups")
     object Profile : Screen("profile", "Profile")
     object Settings : Screen("settings", "Settings")
+    object CreateGroup : Screen("createGroup", "Create Group")
 
     object GroupDetails : Screen("groupDetails/{groupId}", null) {
         fun createRoute(groupId: Int) = "groupDetails/$groupId"

@@ -80,7 +80,7 @@ fun GroupsScreen(
 
         ExtendedFloatingActionButton(
             onClick = {
-                TODO()
+                navigation.navigate(Screen.CreateGroup.route)
             },
             icon = { Icon(Icons.Filled.Add, "Floating action button.") },
             text = { Text(text = "New Group")}
