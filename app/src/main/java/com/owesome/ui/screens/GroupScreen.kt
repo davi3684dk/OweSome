@@ -41,14 +41,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.owesome.data.entities.Expense
 import com.owesome.ui.viewmodels.GroupViewModel
 import com.owesome.ui.viewmodels.NavViewModel
 import org.koin.compose.viewmodel.koinActivityViewModel
+import com.owesome.Screen
+import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinActivityViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewModel: NavViewModel = koinActivityViewModel(), groupId: String) {
+fun GroupScreen(
+    viewModel: GroupViewModel = koinActivityViewModel(),
+    navViewModel: NavViewModel = koinActivityViewModel(),
+    groupId: String,
+    navigation: NavController
+) {
     val group by viewModel.currentGroup.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val state = rememberPullToRefreshState()
@@ -147,7 +156,7 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
 
                         ExtendedFloatingActionButton(
                             onClick = {
-                                TODO()
+                                navigation.navigate(Screen.NewExpense.route)
                             },
                             icon = { Icon(Icons.Filled.Add, "Floating action button.") },
                             text = { Text(text = "New Expense")},

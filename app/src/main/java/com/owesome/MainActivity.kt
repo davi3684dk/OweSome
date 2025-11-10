@@ -49,6 +49,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.owesome.di.appModule
+import com.owesome.ui.screens.ExpenseScreen
 import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.theme.OweSomeTheme
@@ -165,8 +166,13 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
                     ) { backStackEntry ->
                         val groupId = backStackEntry.arguments?.getString("groupId")
                         groupId?.let {id ->
-                            GroupScreen(groupId = id)
+                            GroupScreen(groupId = id, navigation = navController)
                         }
+                    }
+
+                    composable(Screen.NewExpense.route
+                    ) {
+                        ExpenseScreen(navigation = navController)
                     }
                 }
             }
@@ -181,6 +187,7 @@ sealed class Screen(
     object Groups : Screen("groups", "Groups")
     object Profile : Screen("profile", "Profile")
     object Settings : Screen("settings", "Settings")
+    object NewExpense : Screen("newExpense", null)
 
     object GroupDetails : Screen("groupDetails/{groupId}", null) {
         fun createRoute(groupId: Int) = "groupDetails/$groupId"
