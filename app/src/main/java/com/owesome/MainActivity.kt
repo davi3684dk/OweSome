@@ -171,7 +171,7 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
                     }
 
                     composable(Screen.CreateGroup.route) {
-                        CreateGroupScreen()
+                        CreateGroupScreen(navigation = navController)
                     }
                 }
             }

@@ -13,8 +13,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -35,10 +41,13 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,14 +66,17 @@ import com.owesome.Screen
 import com.owesome.data.entities.User
 import com.owesome.ui.viewmodels.GroupViewModel
 import com.owesome.ui.viewmodels.NavViewModel
+import com.owesome.ui.viewmodels.UserViewModel
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinActivityViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), groupViewModel: GroupViewModel = koinActivityViewModel(), navigation: NavController) {
 
     var groupName by rememberSaveable { mutableStateOf("") }
     var groupImage by rememberSaveable { mutableStateOf<Uri?>(null) }
-    var users by rememberSaveable { mutableStateOf(listOf<List<User>>()) }
+    val users = rememberSaveable { mutableStateListOf<User>() }
     val maxGroupNameLength = 30
 
     val context = LocalContext.current
@@ -73,6 +85,8 @@ fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), grou
     var imageError by remember { mutableStateOf(false) }
 
     val openAddDialog = remember { mutableStateOf(false) }
+
+    val scrollState = rememberLazyListState(0)
 
     val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
@@ -90,6 +104,11 @@ fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), grou
 
     LaunchedEffect(Unit) {
         navViewModel.setTitle("Start a Group")
+    }
+
+    LaunchedEffect(users.size) {
+        if (users.isNotEmpty())
+            scrollState.animateScrollToItem(users.size)
     }
 
     Column(
@@ -166,34 +185,62 @@ fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), grou
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(bottom = 10.dp)
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
+                    LazyColumn(
+                        reverseLayout = false,
+                        state = scrollState,
+                        modifier = Modifier.heightIn(0.dp, 140.dp).fillMaxWidth()
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outline,
+                                shape = MaterialTheme.shapes.extraSmall
+                            ),
+
                     ) {
-                        Icon(
-                            Icons.Default.AccountCircle,
-                            contentDescription = "Profile Icon",
-                            modifier = Modifier.padding(end = 10.dp).size(32.dp)
-                        )
-                        Text("You")
+                        item {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.AccountCircle,
+                                    contentDescription = "Profile Icon",
+                                    modifier = Modifier.padding(end = 10.dp).size(32.dp)
+                                )
+                                Text("You")
+                            }
+                        }
+
+                        items(users) { user ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.AccountCircle,
+                                    contentDescription = "Profile Icon",
+                                    modifier = Modifier.padding(end = 10.dp).size(32.dp)
+                                )
+                                Text(user.username)
+                            }
+                        }
                     }
                 }
-            }
-            Button(
-                onClick = {
-                    openAddDialog.value = true
-                },
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Button(
+                    onClick = {
+                        openAddDialog.value = true
+                    },
+                    modifier = Modifier.padding(top = 10.dp)
                 ) {
-                    Icon(
-                        Icons.Default.AddCircleOutline,
-                        contentDescription = "Add participant",
-                        modifier = Modifier.size(32.dp).padding(end = 10.dp),
-                    )
-                    Text(
-                        "Add participant",
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Default.AddCircleOutline,
+                            contentDescription = "Add participant",
+                            modifier = Modifier.size(32.dp).padding(end = 10.dp),
+                        )
+                        Text(
+                            "Add participant",
+                        )
+                    }
                 }
             }
         }
@@ -226,8 +273,9 @@ fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), grou
                 onDismissRequest = { openAddDialog.value = false }
             ) {
                 AddUserDialog(
-                    onUserAdded = {
-
+                    onUserAdded = { user ->
+                        if (!users.contains(user))
+                            users.add(user)
                     }
                 )
             }
@@ -236,10 +284,14 @@ fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), grou
 }
 
 @Composable
-fun AddUserDialog(onUserAdded: (User) -> Unit) {
+fun AddUserDialog(userViewModel: UserViewModel = koinViewModel(), onUserAdded: (User) -> Unit) {
     var username by remember { mutableStateOf("") }
 
     var usernameError by remember { mutableStateOf(false) }
+
+    var usernameSuccess by remember { mutableStateOf(false) }
+
+    val coroutineScope = rememberCoroutineScope()
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -254,15 +306,38 @@ fun AddUserDialog(onUserAdded: (User) -> Unit) {
                 onValueChange = {
                     username = it
                     usernameError = false
+                    usernameSuccess = false
                 },
                 label = {Text("Username")},
                 isError = usernameError
             )
+            if (usernameError) {
+                Text(
+                    "User not found",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            if (usernameSuccess) {
+                Text(
+                    "${username} added successfully",
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
             Button(
                 onClick = {
                     if (username.isEmpty()) {
                         usernameError = true
                         return@Button
+                    }
+
+                    coroutineScope.launch {
+                        val user = userViewModel.findUser(username)
+                        if (user != null) {
+                            onUserAdded(user)
+                            usernameSuccess = true
+                        } else {
+                            usernameError = true
+                        }
                     }
                     //TODO("Need to search for user by username")
                 },
