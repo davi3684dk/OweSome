@@ -8,10 +8,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,9 +16,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,7 +27,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -115,7 +106,7 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
     val headerTitle by viewModel.title.collectAsState()
 
     viewModel.setTitle("Test")
-    val notificationManager = koinInject<NotificationFacade>()
+    val notificationFacade = koinInject<NotificationFacade>()
     OweSomeTheme(
         darkTheme = true,
         dynamicColor = false
@@ -182,8 +173,7 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
                         label = { Screen.Profile.label?.let { Text(it) } }
                     )
                     Button(
-                        //onClick = { notificationManager.sendDefaultNotification() },
-                        onClick = { notificationManager.sendDefaultNotification() },
+                        onClick = { notificationFacade.sendNotification ("test text", "test title") },
                         content = { Text("jajajaj") }
                     )
 
