@@ -8,6 +8,8 @@ import com.owesome.ui.viewmodels.CreateGroupViewModel
 import com.owesome.ui.viewmodels.GroupViewModel
 import com.owesome.ui.viewmodels.NavViewModel
 import com.owesome.ui.viewmodels.AddUserViewModel
+import com.owesome.notifications.NotificationFacade
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -21,4 +23,5 @@ val appModule = module {
     singleOf(::GroupRepositoryImpl) bind GroupRepository::class
     singleOf(::UserRepositoryImpl) bind UserRepository::class
     viewModel { NavViewModel() }
+    single { NotificationFacade(androidContext()) }
 }
