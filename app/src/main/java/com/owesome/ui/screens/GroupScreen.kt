@@ -54,7 +54,9 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
     val state = rememberPullToRefreshState()
 
     LaunchedEffect(Unit) {
-        viewModel.setGroup(groupId)
+        //Only fetch if group isn't already loaded
+        if (groupId != group.id.toString())
+            viewModel.setGroup(groupId)
     }
 
     LaunchedEffect(group) {
