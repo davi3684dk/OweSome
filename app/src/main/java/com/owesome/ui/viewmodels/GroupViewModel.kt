@@ -46,4 +46,8 @@ class GroupViewModel(private val repository: GroupRepository): ViewModel() {
             _isLoading.value = false
         }
     }
+
+    fun setGroup(group: Group) {
+        _currentGroup.value = group
+    }
 }

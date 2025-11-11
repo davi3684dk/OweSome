@@ -1,26 +1,20 @@
 package com.owesome.ui.screens
 
-import android.R
-import android.graphics.drawable.Icon
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -28,8 +22,8 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -37,25 +31,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -64,51 +52,38 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.owesome.Screen
 import com.owesome.data.entities.User
+import com.owesome.ui.viewmodels.CreateGroupViewModel
 import com.owesome.ui.viewmodels.GroupViewModel
 import com.owesome.ui.viewmodels.NavViewModel
-import com.owesome.ui.viewmodels.UserViewModel
+import com.owesome.ui.viewmodels.AddUserViewModel
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), groupViewModel: GroupViewModel = koinActivityViewModel(), navigation: NavController) {
-
-    var groupName by rememberSaveable { mutableStateOf("") }
-    var groupImage by rememberSaveable { mutableStateOf<Uri?>(null) }
-    val users = rememberSaveable { mutableStateListOf<User>() }
-    val maxGroupNameLength = 30
-
-    val context = LocalContext.current
-
-    var groupError by remember { mutableStateOf(false) }
-    var imageError by remember { mutableStateOf(false) }
-
+fun CreateGroupScreen(viewModel: CreateGroupViewModel = koinInject(), navViewModel: NavViewModel = koinActivityViewModel(), groupViewModel: GroupViewModel = koinActivityViewModel(), navigation: NavController) {
     val openAddDialog = remember { mutableStateOf(false) }
 
     val scrollState = rememberLazyListState(0)
 
     val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) {
-            groupImage = uri
-            imageError = false
-            /*
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val bytes = inputStream?.readBytes()
-            inputStream?.close()
-            if (bytes != null) {
-                groupImage = Base64.encodeToString(bytes, Base64.DEFAULT)
-            }*/
-        }
+        viewModel.onGroupImageChange(uri)
     }
 
     LaunchedEffect(Unit) {
         navViewModel.setTitle("Start a Group")
+        viewModel.groupCreated.collect {
+            groupViewModel.setGroup(it) //update group of shared viewmodel before navigating
+            navigation.navigate(Screen.GroupDetails.createRoute(it.id)) {
+                popUpTo(Screen.Groups.route)
+            }
+        }
     }
 
-    LaunchedEffect(users.size) {
-        if (users.isNotEmpty())
-            scrollState.animateScrollToItem(users.size)
+    LaunchedEffect(viewModel.users.size) {
+        if (viewModel.users.isNotEmpty())
+            scrollState.animateScrollToItem(viewModel.users.size)
     }
 
     Column(
@@ -134,11 +109,11 @@ fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), grou
                     modifier = Modifier.border(
                             width = 2.dp,
                             shape = CircleShape,
-                            color = if (imageError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
+                            color = if (viewModel.imageError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
                         ).clip(CircleShape),
                 ) {
                     AsyncImage(
-                        model = groupImage,
+                        model = viewModel.groupImage,
                         contentDescription = "Selected Image",
                         modifier = Modifier.size(200.dp),
                         contentScale = ContentScale.Crop,
@@ -146,28 +121,25 @@ fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), grou
                         fallback = rememberVectorPainter(image = Icons.Default.Image),
                         placeholder = rememberVectorPainter(Icons.Default.Image),
                         colorFilter =
-                            if (groupImage == null)
-                                ColorFilter.tint(color = if (imageError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline)
+                            if (viewModel.groupImage == null)
+                                ColorFilter.tint(color = if (viewModel.imageError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline)
                             else null
                     )
                 }
 
                 OutlinedTextField(
-                    value = groupName,
+                    value = viewModel.groupName,
                     onValueChange = { it ->
-                        if (it.length <= maxGroupNameLength) {
-                            groupName = it
-                            groupError = false
-                        }
+                        viewModel.onGroupNameChange(it)
                     },
                     label = { Text("Group Name") },
                     singleLine = true,
-                    isError = groupError,
+                    isError = viewModel.groupError,
                     modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text)
                 )
                 Text(
-                    text = "${groupName.length} / $maxGroupNameLength",
+                    text = "${viewModel.groupName.length} / ${viewModel.maxGroupNameLength}",
                     textAlign = TextAlign.End,
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
@@ -209,7 +181,7 @@ fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), grou
                             }
                         }
 
-                        items(users) { user ->
+                        items(viewModel.users) { user ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -246,20 +218,7 @@ fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), grou
         }
         FloatingActionButton(
             onClick = {
-                if (groupName.isEmpty()) {
-                    groupError = true
-                }
-
-                if (groupImage == null) {
-                    imageError = true
-                }
-
-                if (groupError || imageError)
-                    return@FloatingActionButton
-
-                //TODO groupViewModel.createGroup()
-
-                //TODO navigation.navigate()
+                viewModel.createGroup()
             }
         ) {
             Text(
@@ -274,8 +233,7 @@ fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), grou
             ) {
                 AddUserDialog(
                     onUserAdded = { user ->
-                        if (!users.contains(user))
-                            users.add(user)
+                        viewModel.addUser(user)
                     }
                 )
             }
@@ -284,14 +242,8 @@ fun CreateGroupScreen(navViewModel: NavViewModel = koinActivityViewModel(), grou
 }
 
 @Composable
-fun AddUserDialog(userViewModel: UserViewModel = koinViewModel(), onUserAdded: (User) -> Unit) {
-    var username by remember { mutableStateOf("") }
-
-    var usernameError by remember { mutableStateOf(false) }
-
-    var usernameSuccess by remember { mutableStateOf(false) }
-
-    val coroutineScope = rememberCoroutineScope()
+fun AddUserDialog(viewModel: AddUserViewModel = koinViewModel(), onUserAdded: (User) -> Unit) {
+    val user = viewModel.foundUser
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -302,52 +254,50 @@ fun AddUserDialog(userViewModel: UserViewModel = koinViewModel(), onUserAdded: (
             modifier = Modifier.padding(20.dp)
         ) {
             OutlinedTextField(
-                value = username,
+                value = viewModel.username,
                 onValueChange = {
-                    username = it
-                    usernameError = false
-                    usernameSuccess = false
+                    viewModel.onUsernameChange(it)
                 },
                 label = {Text("Username")},
-                isError = usernameError
+                isError = viewModel.usernameError
             )
-            if (usernameError) {
+            if (viewModel.usernameError) {
                 Text(
                     "User not found",
                     color = MaterialTheme.colorScheme.error
                 )
             }
-            if (usernameSuccess) {
+            if (viewModel.usernameSuccess) {
                 Text(
-                    "${username} added successfully",
+                    "${viewModel.username} found!",
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            Button(
-                onClick = {
-                    if (username.isEmpty()) {
-                        usernameError = true
-                        return@Button
-                    }
 
-                    coroutineScope.launch {
-                        val user = userViewModel.findUser(username)
-                        if (user != null) {
-                            onUserAdded(user)
-                            usernameSuccess = true
-                        } else {
-                            usernameError = true
-                        }
-                    }
-                    //TODO("Need to search for user by username")
-                },
-                modifier = Modifier.padding(top = 20.dp)
-            ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = "Add Icon"
-                )
-                Text(text = "Add User")
+            if (user == null) {
+                Button(
+                    onClick = {
+                        viewModel.searchUser()
+                    },
+                    modifier = Modifier.padding(top = 20.dp),
+                    enabled = !viewModel.loading
+                ) {
+                    Icon(Icons.Default.Search, contentDescription = "Search User")
+                    Text("Search User")
+                }
+            } else {
+                Button(
+                    onClick = {
+                        onUserAdded(user)
+                    },
+                    modifier = Modifier.padding(top = 20.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Add Icon"
+                    )
+                    Text(text = "Add User")
+                }
             }
         }
     }
