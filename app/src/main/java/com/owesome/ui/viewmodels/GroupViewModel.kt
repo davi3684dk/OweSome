@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class GroupViewModel(private val repository: GroupRepository): ViewModel() {
     private var _currentGroup = MutableStateFlow(Group(
-        0, "", "", listOf(), listOf(), 0f
+        -1, "", "", listOf(), listOf(), 0f
     ))
     val currentGroup: StateFlow<Group> get() = _currentGroup
 
