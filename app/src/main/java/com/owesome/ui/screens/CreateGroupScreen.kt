@@ -22,11 +22,13 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -169,28 +171,52 @@ fun CreateGroupScreen(viewModel: CreateGroupViewModel = koinInject(), navViewMod
 
                     ) {
                         item {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    Icons.Default.AccountCircle,
-                                    contentDescription = "Profile Icon",
-                                    modifier = Modifier.padding(end = 10.dp).size(32.dp)
-                                )
-                                Text("You")
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(5.dp).fillMaxWidth()
+                                ) {
+                                    Icon(
+                                        Icons.Default.AccountCircle,
+                                        contentDescription = "Profile Icon",
+                                        modifier = Modifier.padding(end = 10.dp).size(32.dp)
+                                    )
+                                    Text("You")
+                                }
+                                HorizontalDivider()
                             }
                         }
 
                         items(viewModel.users) { user ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    Icons.Default.AccountCircle,
-                                    contentDescription = "Profile Icon",
-                                    modifier = Modifier.padding(end = 10.dp).size(32.dp)
-                                )
-                                Text(user.username)
+                            Column{
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.padding(5.dp).fillMaxWidth()
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.AccountCircle,
+                                            contentDescription = "Profile Icon",
+                                            modifier = Modifier.padding(end = 10.dp).size(32.dp)
+                                        )
+                                        Text(user.username)
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            viewModel.removeUser(user)
+                                        },
+                                        modifier = Modifier.padding(end = 10.dp).size(32.dp),
+                                    ) {
+                                        Icon(
+                                            Icons.Default.RemoveCircle,
+                                            contentDescription = "Remove Icon",
+                                            tint = MaterialTheme.colorScheme.error,
+                                        )
+                                    }
+                                }
+                                HorizontalDivider()
                             }
                         }
                     }

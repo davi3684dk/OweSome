@@ -66,7 +66,8 @@ class CreateGroupViewModel(
     }
 
     fun addUser(user: User) {
-        users.add(user)
+        if (!users.contains(user))
+            users.add(user)
     }
 
     fun createGroup() {
@@ -83,5 +84,9 @@ class CreateGroupViewModel(
                 _groupCreated.send(newGroup)
             }
         }
+    }
+
+    fun removeUser(user: User) {
+        users.remove(user)
     }
 }
