@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">OweSome</string>
+    <string name="channel_name">OweSome Notification Channel</string>
+    <string name="channel_description">Channel for OweSome notifications</string>
+    <string name="notification_title">OweSome</string>
+    <string name="notification_text">You have new updates.</string>
 </resources>

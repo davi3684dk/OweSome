@@ -12,7 +12,7 @@ interface GroupRepository {
     suspend fun getAllGroups(): List<GroupCompact>
     suspend fun getGroup(groupId: String): Group?
 
-    suspend fun createGroup(name: String, description: String)
+    suspend fun createGroup(name: String, description: String, users: List<User>): Group?
     suspend fun addUser(groupId: Int, userId: Int)
 
     suspend fun addExpense(expense: ExpenseCreate)
@@ -89,8 +89,15 @@ class GroupRepositoryImpl : GroupRepository {
         )
     }
 
-    override suspend fun createGroup(name: String, description: String) {
-        TODO("Not yet implemented")
+    override suspend fun createGroup(name: String, description: String, users: List<User>): Group? {
+        return Group(
+            id = 0,
+            name = name,
+            description = description,
+            users = users,
+            expenses = listOf(),
+            status = 0f
+        )
     }
 
     override suspend fun addUser(groupId: Int, userId: Int) {
