@@ -54,6 +54,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.owesome.Screen
 import com.owesome.data.entities.User
+import com.owesome.ui.composables.AddUserDialog
 import com.owesome.ui.viewmodels.CreateGroupViewModel
 import com.owesome.ui.viewmodels.GroupViewModel
 import com.owesome.ui.viewmodels.NavViewModel
@@ -267,64 +268,3 @@ fun CreateGroupScreen(viewModel: CreateGroupViewModel = koinInject(), navViewMod
     }
 }
 
-@Composable
-fun AddUserDialog(viewModel: AddUserViewModel = koinViewModel(), onUserAdded: (User) -> Unit) {
-    val user = viewModel.foundUser
-
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = MaterialTheme.shapes.large
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(20.dp)
-        ) {
-            OutlinedTextField(
-                value = viewModel.username,
-                onValueChange = {
-                    viewModel.onUsernameChange(it)
-                },
-                label = {Text("Username")},
-                isError = viewModel.usernameError
-            )
-            if (viewModel.usernameError) {
-                Text(
-                    "User not found",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            if (viewModel.usernameSuccess) {
-                Text(
-                    "${viewModel.username} found!",
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            if (user == null) {
-                Button(
-                    onClick = {
-                        viewModel.searchUser()
-                    },
-                    modifier = Modifier.padding(top = 20.dp),
-                    enabled = !viewModel.loading
-                ) {
-                    Icon(Icons.Default.Search, contentDescription = "Search User")
-                    Text("Search User")
-                }
-            } else {
-                Button(
-                    onClick = {
-                        onUserAdded(user)
-                    },
-                    modifier = Modifier.padding(top = 20.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Add Icon"
-                    )
-                    Text(text = "Add User")
-                }
-            }
-        }
-    }
-}

@@ -40,6 +40,11 @@ class CreateGroupViewModel(
     private val _groupCreated = Channel<Group>()
     val groupCreated = _groupCreated.receiveAsFlow()
 
+    fun setGroup(group: Group) {
+        groupName = group.name
+        users.addAll(group.users)
+    }
+
     fun validateFields(): Boolean {
         var valid = true
         if (groupName.isEmpty()) {
@@ -83,6 +88,15 @@ class CreateGroupViewModel(
             if (newGroup != null) {
                 _groupCreated.send(newGroup)
             }
+        }
+    }
+
+    fun updateGroup() {
+        if (!validateFields())
+            return
+
+        viewModelScope.launch {
+
         }
     }
 
