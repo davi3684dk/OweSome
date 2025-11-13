@@ -1,5 +1,6 @@
 package com.owesome.ui.screens
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,223 +48,54 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.owesome.Screen
+import com.owesome.data.entities.Group
+import com.owesome.data.entities.User
 import com.owesome.ui.composables.AddUserDialog
-import com.owesome.ui.viewmodels.CreateGroupViewModel
+import com.owesome.ui.composables.GroupEditorForm
+import com.owesome.ui.viewmodels.GroupEditorUiState
+import com.owesome.ui.viewmodels.GroupEditorViewModel
 import com.owesome.ui.viewmodels.GroupViewModel
 import com.owesome.ui.viewmodels.NavViewModel
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun EditGroupScreen(
     navigation: NavController,
-    viewModel: CreateGroupViewModel = koinViewModel(),
+    viewModel: GroupEditorViewModel = koinViewModel(),
     navViewModel: NavViewModel = koinActivityViewModel(),
     groupViewModel: GroupViewModel = koinActivityViewModel()
 ) {
-    val openAddDialog = remember { mutableStateOf(false) }
-
-    val scrollState = rememberLazyListState(0)
-
-    val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        viewModel.onGroupImageChange(uri)
-    }
+    val uiState = viewModel.uiState
 
     LaunchedEffect(Unit) {
         navViewModel.setTitle(groupViewModel.currentGroup.value.name)
-
         viewModel.setGroup(groupViewModel.currentGroup.value)
 
-        viewModel.groupCreated.collect {
+        viewModel.onComplete.collect {
             groupViewModel.setGroup(it) //update group of shared viewmodel before navigating
-            navigation.navigate(Screen.GroupDetails.createRoute(it.id)) {
-                popUpTo(Screen.Groups.route)
-            }
+            navigation.popBackStack()
         }
     }
 
-    LaunchedEffect(viewModel.users.size) {
-        if (viewModel.users.isNotEmpty())
-            scrollState.animateScrollToItem(viewModel.users.size)
-    }
-
-    Column(
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize().padding(vertical = 20.dp)
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-        ) {
-            Column (
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-            ) {
-                Surface(
-                    onClick = {
-                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    },
-                    modifier = Modifier.border(
-                        width = 2.dp,
-                        shape = CircleShape,
-                        color = if (viewModel.imageError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
-                    ).clip(CircleShape),
-                ) {
-                    AsyncImage(
-                        model = viewModel.groupImage,
-                        contentDescription = "Selected Image",
-                        modifier = Modifier.size(200.dp),
-                        contentScale = ContentScale.Crop,
-                        error = rememberVectorPainter(image = Icons.Default.Image),
-                        fallback = rememberVectorPainter(image = Icons.Default.Image),
-                        placeholder = rememberVectorPainter(Icons.Default.Image),
-                        colorFilter =
-                            if (viewModel.groupImage == null)
-                                ColorFilter.tint(color = if (viewModel.imageError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline)
-                            else null
-                    )
-                }
-
-                OutlinedTextField(
-                    value = viewModel.groupName,
-                    onValueChange = { it ->
-                        viewModel.onGroupNameChange(it)
-                    },
-                    label = { Text("Group Name") },
-                    singleLine = true,
-                    isError = viewModel.groupError,
-                    modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text)
-                )
-                Text(
-                    text = "${viewModel.groupName.length} / ${viewModel.maxGroupNameLength}",
-                    textAlign = TextAlign.End,
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
-                )
-
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 20.dp)
-                )
-
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Participants:",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(bottom = 10.dp)
-                    )
-                    LazyColumn(
-                        reverseLayout = false,
-                        state = scrollState,
-                        modifier = Modifier.heightIn(0.dp, 140.dp).fillMaxWidth()
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outline,
-                                shape = MaterialTheme.shapes.extraSmall
-                            ),
-
-                        ) {
-                        item {
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(5.dp).fillMaxWidth()
-                                ) {
-                                    Icon(
-                                        Icons.Default.AccountCircle,
-                                        contentDescription = "Profile Icon",
-                                        modifier = Modifier.padding(end = 10.dp).size(32.dp)
-                                    )
-                                    Text("You")
-                                }
-                                HorizontalDivider()
-                            }
-                        }
-
-                        items(viewModel.users) { user ->
-                            Column{
-                                Row(
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    modifier = Modifier.padding(5.dp).fillMaxWidth()
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Default.AccountCircle,
-                                            contentDescription = "Profile Icon",
-                                            modifier = Modifier.padding(end = 10.dp).size(32.dp)
-                                        )
-                                        Text(user.username)
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            viewModel.removeUser(user)
-                                        },
-                                        modifier = Modifier.padding(end = 10.dp).size(32.dp),
-                                    ) {
-                                        Icon(
-                                            Icons.Default.RemoveCircle,
-                                            contentDescription = "Remove Icon",
-                                            tint = MaterialTheme.colorScheme.error,
-                                        )
-                                    }
-                                }
-                                HorizontalDivider()
-                            }
-                        }
-                    }
-                }
-                Button(
-                    onClick = {
-                        openAddDialog.value = true
-                    },
-                    modifier = Modifier.padding(top = 10.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            Icons.Default.AddCircleOutline,
-                            contentDescription = "Add participant",
-                            modifier = Modifier.size(32.dp).padding(end = 10.dp),
-                        )
-                        Text(
-                            "Add participant",
-                        )
-                    }
-                }
-            }
-        }
-        FloatingActionButton(
-            onClick = {
-                viewModel.updateGroup()
-            }
-        ) {
-            Text(
-                text = "Save",
-                modifier = Modifier.padding(20.dp)
-            )
-        }
-
-        if (openAddDialog.value) {
-            Dialog(
-                onDismissRequest = { openAddDialog.value = false }
-            ) {
-                AddUserDialog(
-                    onUserAdded = { user ->
-                        viewModel.addUser(user)
-                    }
-                )
-            }
-        }
-    }
+    GroupEditorForm(
+        uiState,
+        onNameChange = {
+            viewModel.onGroupNameChange(it)
+        },
+        onImageChange = {
+            viewModel.onGroupImageChange(it)
+        },
+        onUserAdded = {
+            viewModel.addUser(it)
+        },
+        onUserRemoved = {
+            viewModel.removeUser(it)
+        },
+        onSubmit = {
+            viewModel.updateGroup()
+        },
+        "Save"
+    )
 }
+

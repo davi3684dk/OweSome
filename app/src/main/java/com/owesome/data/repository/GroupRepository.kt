@@ -16,6 +16,7 @@ interface GroupRepository {
     suspend fun addUser(groupId: Int, userId: Int)
 
     suspend fun addExpense(expense: ExpenseCreate)
+    suspend fun updateGroup(groupId: Int, name: String, description: String, users: List<User>): Group?
 }
 
 class GroupRepositoryImpl : GroupRepository {
@@ -92,6 +93,22 @@ class GroupRepositoryImpl : GroupRepository {
     override suspend fun createGroup(name: String, description: String, users: List<User>): Group? {
         return Group(
             id = 0,
+            name = name,
+            description = description,
+            users = users,
+            expenses = listOf(),
+            status = 0f
+        )
+    }
+
+    override suspend fun updateGroup(
+        groupId: Int,
+        name: String,
+        description: String,
+        users: List<User>
+    ): Group? {
+        return Group(
+            id = groupId,
             name = name,
             description = description,
             users = users,

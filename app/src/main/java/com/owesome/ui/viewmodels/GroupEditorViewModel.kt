@@ -1,12 +1,12 @@
 package com.owesome.ui.viewmodels
 
 import android.net.Uri
+import androidx.compose.runtime.IntState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.State
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.owesome.data.entities.Group
@@ -16,63 +16,61 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-class CreateGroupViewModel(
+class GroupEditorUiState {
+    var groupId by mutableIntStateOf(-1)
+    var groupName by mutableStateOf("")
+    var groupImage by mutableStateOf<Uri?>(null)
+    var imageError by mutableStateOf(false)
+    var nameError by mutableStateOf(false)
+    var users = mutableStateListOf<User>()
+
+    val maxGroupNameLength: Int = 30
+}
+
+class GroupEditorViewModel(
     private val groupRepository: GroupRepository
 ) : ViewModel() {
-    val maxGroupNameLength = 30
-
-    var groupName by mutableStateOf("")
-        private set
-
-    var groupImage by mutableStateOf<Uri?>(null)
-        private set
-
-    var users = mutableStateListOf<User>()
-        private set
-
-    var groupError by mutableStateOf(false)
-        private set
-
-    var imageError by mutableStateOf(false)
+    var uiState by mutableStateOf(GroupEditorUiState())
         private set
 
     //Use channel for producer->consumer, and Flows for broadcasting
-    private val _groupCreated = Channel<Group>()
-    val groupCreated = _groupCreated.receiveAsFlow()
+    private val _onComplete = Channel<Group>()
+    val onComplete = _onComplete.receiveAsFlow()
 
     fun setGroup(group: Group) {
-        groupName = group.name
-        users.addAll(group.users)
+        uiState.groupName = group.name
+        uiState. groupId = group.id
+        uiState.users.addAll(group.users)
     }
 
     fun validateFields(): Boolean {
         var valid = true
-        if (groupName.isEmpty()) {
-            groupError = true
+        if (uiState.groupName.isEmpty()) {
+            uiState.nameError = true
             valid = false
         }
-        if (groupImage == null) {
-            imageError = true
+        if (uiState.groupImage == null) {
+            uiState.imageError = true
             valid = false
         }
         return valid
     }
 
     fun onGroupNameChange(newName: String) {
-        if (newName.length <= maxGroupNameLength)
-            groupName = newName
+        if (newName.length <= uiState.maxGroupNameLength)
+            uiState.groupName = newName
 
-        groupError = false
+        uiState.nameError = false
     }
 
     fun onGroupImageChange(uri: Uri?) {
-        groupImage = uri
-        imageError = false
+        uiState.groupImage = uri
+        uiState.imageError = false
     }
 
     fun addUser(user: User) {
-        if (!users.contains(user))
-            users.add(user)
+        if (!uiState.users.contains(user))
+            uiState. users.add(user)
     }
 
     fun createGroup() {
@@ -81,12 +79,12 @@ class CreateGroupViewModel(
 
         viewModelScope.launch {
             val newGroup = groupRepository.createGroup(
-                name = groupName,
+                name = uiState.groupName,
                 description = "",
-                users = users
+                users = uiState.users
             )
             if (newGroup != null) {
-                _groupCreated.send(newGroup)
+                _onComplete.send(newGroup)
             }
         }
     }
@@ -96,11 +94,19 @@ class CreateGroupViewModel(
             return
 
         viewModelScope.launch {
-
+            val updatedGroup = groupRepository.updateGroup(
+                uiState.groupId,
+                uiState.groupName,
+                "",
+                uiState.users
+            )
+            if (updatedGroup != null) {
+                _onComplete.send(updatedGroup)
+            }
         }
     }
 
     fun removeUser(user: User) {
-        users.remove(user)
+        uiState.users.remove(user)
     }
 }
