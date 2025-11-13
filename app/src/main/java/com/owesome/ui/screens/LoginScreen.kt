@@ -55,7 +55,7 @@ fun LoginScreen(navController: NavController, onLoginSuccess: (UserCreate) -> Un
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Login", style = MaterialTheme.typography.displayMedium)
+        Text("Login", style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(44.dp))
 
