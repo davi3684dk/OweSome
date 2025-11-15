@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.owesome.data.entities.User
 import com.owesome.ui.viewmodels.GroupEditorUiState
 
@@ -100,7 +103,7 @@ fun GroupEditorForm(
                     ).clip(CircleShape),
                 ) {
                     AsyncImage(
-                        model = uiState.groupImage,
+                        model = uiState.groupImage?.asAndroidBitmap(),
                         contentDescription = "Selected Image",
                         modifier = Modifier.size(200.dp),
                         contentScale = ContentScale.Crop,

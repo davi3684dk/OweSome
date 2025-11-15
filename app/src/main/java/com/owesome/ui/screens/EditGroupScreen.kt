@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -66,6 +67,7 @@ fun EditGroupScreen(
     navViewModel: NavViewModel = koinActivityViewModel(),
     groupViewModel: GroupViewModel = koinActivityViewModel()
 ) {
+    val context = LocalContext.current
     val uiState = viewModel.uiState
 
     LaunchedEffect(Unit) {
@@ -84,7 +86,7 @@ fun EditGroupScreen(
             viewModel.onGroupNameChange(it)
         },
         onImageChange = {
-            viewModel.onGroupImageChange(it)
+            viewModel.onGroupImageChange(it, context)
         },
         onUserAdded = {
             viewModel.addUser(it)
@@ -93,7 +95,7 @@ fun EditGroupScreen(
             viewModel.removeUser(it)
         },
         onSubmit = {
-            viewModel.updateGroup()
+            viewModel.updateGroup(context)
         },
         "Save"
     )

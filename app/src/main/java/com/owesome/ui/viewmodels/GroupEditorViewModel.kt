@@ -1,17 +1,21 @@
 package com.owesome.ui.viewmodels
 
+import android.content.Context
 import android.net.Uri
+import android.util.Base64
 import androidx.compose.runtime.IntState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.owesome.data.entities.Group
 import com.owesome.data.entities.User
 import com.owesome.data.repository.GroupRepository
+import com.owesome.util.ImageUtil
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -19,7 +23,7 @@ import kotlinx.coroutines.launch
 class GroupEditorUiState {
     var groupId by mutableIntStateOf(-1)
     var groupName by mutableStateOf("")
-    var groupImage by mutableStateOf<Uri?>(null)
+    var groupImage by mutableStateOf<ImageBitmap?>(null)
     var imageError by mutableStateOf(false)
     var nameError by mutableStateOf(false)
     var users = mutableStateListOf<User>()
@@ -39,8 +43,9 @@ class GroupEditorViewModel(
 
     fun setGroup(group: Group) {
         uiState.groupName = group.name
-        uiState. groupId = group.id
+        uiState.groupId = group.id
         uiState.users.addAll(group.users)
+        uiState.groupImage = group.image
     }
 
     fun validateFields(): Boolean {
@@ -63,8 +68,10 @@ class GroupEditorViewModel(
         uiState.nameError = false
     }
 
-    fun onGroupImageChange(uri: Uri?) {
-        uiState.groupImage = uri
+    fun onGroupImageChange(uri: Uri?, context: Context) {
+        if (uri != null) {
+            uiState.groupImage = ImageUtil.uriToImageBitmap(uri, context)
+        }
         uiState.imageError = false
     }
 
@@ -89,16 +96,22 @@ class GroupEditorViewModel(
         }
     }
 
-    fun updateGroup() {
+    fun updateGroup(context: Context) {
         if (!validateFields())
             return
 
         viewModelScope.launch {
+            var groupImage = ""
+            if (uiState.groupImage != null) {
+                groupImage = ImageUtil.imageBitmapToBase64(uiState.groupImage!!) ?: ""
+            }
+
             val updatedGroup = groupRepository.updateGroup(
                 uiState.groupId,
                 uiState.groupName,
                 "",
-                uiState.users
+                uiState.users,
+                groupImage
             )
             if (updatedGroup != null) {
                 _onComplete.send(updatedGroup)

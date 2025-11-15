@@ -41,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -59,6 +60,7 @@ import org.koin.compose.viewmodel.koinActivityViewModel
 @Composable
 fun CreateGroupScreen(viewModel: GroupEditorViewModel = koinInject(), navViewModel: NavViewModel = koinActivityViewModel(), groupViewModel: GroupViewModel = koinActivityViewModel(), navigation: NavController) {
     val uiState = viewModel.uiState
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         navViewModel.setTitle("Start a Group")
@@ -76,7 +78,7 @@ fun CreateGroupScreen(viewModel: GroupEditorViewModel = koinInject(), navViewMod
             viewModel.onGroupNameChange(it)
         },
         onImageChange = {
-            viewModel.onGroupImageChange(it)
+            viewModel.onGroupImageChange(it, context)
         },
         onUserAdded = {
             viewModel.addUser(it)
