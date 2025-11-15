@@ -89,6 +89,8 @@ class GroupRepositoryImpl : GroupRepository {
     }
 
     override suspend fun getAllGroups(): List<GroupCompact> {
+        delay(200)
+
         return mutableListOf(
             GroupCompact(0, "Vacation to Prague", "", -400, null),
             GroupCompact(1, "Household", "", 2500, null),
