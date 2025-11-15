@@ -51,6 +51,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.owesome.data.auth.AuthManager
 import com.owesome.di.appModule
 import com.owesome.ui.screens.CreateGroupScreen
 import com.owesome.notifications.NotificationFacade
@@ -110,11 +111,17 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
+fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: AuthManager = koinInject()) {
     val navController = rememberNavController()
     var selectedDestination by rememberSaveable { mutableStateOf(Screen.Groups.route) }
 
     val headerTitle by viewModel.title.collectAsState()
+
+    LaunchedEffect(Unit) {
+        authManager.loginRequired.collect {
+            //TODO navController.navigate()
+        }
+    }
 
     viewModel.setTitle("Test")
     val notificationFacade = koinInject<NotificationFacade>()
