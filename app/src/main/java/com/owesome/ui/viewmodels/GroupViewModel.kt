@@ -1,9 +1,15 @@
 package com.owesome.ui.viewmodels
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.res.imageResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.owesome.data.entities.Expense
+import com.owesome.data.entities.ExpenseShare
 import com.owesome.data.entities.Group
 import com.owesome.data.entities.GroupCompact
+import com.owesome.data.entities.User
 import com.owesome.data.repository.GroupRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,24 +17,23 @@ import kotlinx.coroutines.launch
 
 class GroupViewModel(private val repository: GroupRepository): ViewModel() {
     private var _currentGroup = MutableStateFlow(Group(
-        0, "", "", listOf(), listOf(), 0f
+        -1, "", "", listOf(), listOf(), 0f, null
     ))
     val currentGroup: StateFlow<Group> get() = _currentGroup
-
-    private var _groups = MutableStateFlow<List<GroupCompact>>(listOf())
-    val groups: StateFlow<List<GroupCompact>> get() = _groups
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    init {
-        fetchGroups()
-    }
+    var groups = mutableStateListOf<GroupCompact>()
+        private set
 
-    fun fetchGroups() {
+
+    fun getAllGroups() {
         _isLoading.value = true
         viewModelScope.launch {
-            _groups.value = repository.getAllGroups()
+            val rawGroups = repository.getAllGroups()
+            groups.clear()
+            groups.addAll(rawGroups)
             _isLoading.value = false
         }
     }
@@ -43,5 +48,9 @@ class GroupViewModel(private val repository: GroupRepository): ViewModel() {
             }
             _isLoading.value = false
         }
+    }
+
+    fun setGroup(group: Group) {
+        _currentGroup.value = group
     }
 }

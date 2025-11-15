@@ -1,9 +1,13 @@
 package com.owesome
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,29 +46,43 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.owesome.data.auth.AuthManager
 import com.owesome.di.appModule
+import com.owesome.ui.screens.CreateGroupScreen
+import com.owesome.notifications.NotificationFacade
+import com.owesome.ui.screens.EditGroupScreen
 import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
-import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 import org.koin.core.context.startKoin
-import kotlin.math.log
+
 
 class MainActivity : ComponentActivity() {
+
+    val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission is granted. Continue the action or workflow in your
+            // app.
+        } else {
+            // Explain to the user that the feature is unavailable because the
+            // feature requires a permission that the user has denied. At the
+            // same time, respect the user's decision. Don't link to system
+            // settings in an effort to convince the user to change their
+            // decision.
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -73,6 +91,15 @@ class MainActivity : ComponentActivity() {
             androidContext(this@MainActivity)
             modules(appModule)
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
+
 
         enableEdgeToEdge()
         setContent {
@@ -83,19 +110,14 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: AuthManager = koinInject()) {
+fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
     val navController = rememberNavController()
-
     var selectedDestination by rememberSaveable { mutableStateOf(Screen.Groups.route) }
 
     val headerTitle by viewModel.title.collectAsState()
 
-    LaunchedEffect(Unit) {
-        authManager.loginRequired.collect {
-            navController.navigate(Screen.Groups.route)
-        }
-    }
-
+    viewModel.setTitle("Test")
+    val notificationFacade = koinInject<NotificationFacade>()
     OweSomeTheme(
         darkTheme = true,
         dynamicColor = false
@@ -117,6 +139,18 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                             )
                         }
                     },
+                    actions = {
+                        viewModel.settingsIcon?.let {
+                            IconButton(onClick = {
+                                viewModel.settingsPressed()
+                            }) {
+                                Icon(
+                                    imageVector = viewModel.settingsIcon!!,
+                                    contentDescription = "Localized description"
+                                )
+                            }
+                        }
+                    }
                     /*modifier = Modifier.dropShadow(
                         shape = RoundedCornerShape(0.dp),
                         shadow = Shadow(
@@ -176,8 +210,16 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                     ) { backStackEntry ->
                         val groupId = backStackEntry.arguments?.getString("groupId")
                         groupId?.let {id ->
-                            GroupScreen(groupId = id)
+                            GroupScreen(groupId = id, navigation = navController)
                         }
+                    }
+
+                    composable(Screen.CreateGroup.route) {
+                        CreateGroupScreen(navigation = navController)
+                    }
+
+                    composable(Screen.EditGroup.route) {
+                        EditGroupScreen(navigation = navController)
                     }
                 }
             }
@@ -192,10 +234,10 @@ sealed class Screen(
     object Groups : Screen("groups", "Groups")
     object Profile : Screen("profile", "Profile")
     object Settings : Screen("settings", "Settings")
+    object CreateGroup : Screen("createGroup", "Create Group")
+    object EditGroup : Screen("editGroup", "Edit Group")
 
     object GroupDetails : Screen("groupDetails/{groupId}", null) {
         fun createRoute(groupId: Int) = "groupDetails/$groupId"
     }
-
-    object Login : Screen("login", "Login")
 }
