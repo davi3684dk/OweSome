@@ -54,6 +54,7 @@ import androidx.navigation.compose.rememberNavController
 import com.owesome.di.appModule
 import com.owesome.ui.screens.CreateGroupScreen
 import com.owesome.notifications.NotificationFacade
+import com.owesome.ui.screens.EditGroupScreen
 import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.theme.OweSomeTheme
@@ -138,6 +139,18 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
                             )
                         }
                     },
+                    actions = {
+                        viewModel.settingsIcon?.let {
+                            IconButton(onClick = {
+                                viewModel.settingsPressed()
+                            }) {
+                                Icon(
+                                    imageVector = viewModel.settingsIcon!!,
+                                    contentDescription = "Localized description"
+                                )
+                            }
+                        }
+                    }
                     /*modifier = Modifier.dropShadow(
                         shape = RoundedCornerShape(0.dp),
                         shadow = Shadow(
@@ -197,12 +210,16 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
                     ) { backStackEntry ->
                         val groupId = backStackEntry.arguments?.getString("groupId")
                         groupId?.let {id ->
-                            GroupScreen(groupId = id)
+                            GroupScreen(groupId = id, navigation = navController)
                         }
                     }
 
                     composable(Screen.CreateGroup.route) {
                         CreateGroupScreen(navigation = navController)
+                    }
+
+                    composable(Screen.EditGroup.route) {
+                        EditGroupScreen(navigation = navController)
                     }
                 }
             }
@@ -218,6 +235,7 @@ sealed class Screen(
     object Profile : Screen("profile", "Profile")
     object Settings : Screen("settings", "Settings")
     object CreateGroup : Screen("createGroup", "Create Group")
+    object EditGroup : Screen("editGroup", "Edit Group")
 
     object GroupDetails : Screen("groupDetails/{groupId}", null) {
         fun createRoute(groupId: Int) = "groupDetails/$groupId"

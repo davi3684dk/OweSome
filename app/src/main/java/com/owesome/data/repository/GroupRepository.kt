@@ -1,5 +1,9 @@
 package com.owesome.data.repository
 
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
+import androidx.compose.ui.graphics.asImageBitmap
 import com.owesome.data.entities.Expense
 import com.owesome.data.entities.ExpenseCreate
 import com.owesome.data.entities.ExpenseShare
@@ -16,6 +20,7 @@ interface GroupRepository {
     suspend fun addUser(groupId: Int, userId: Int)
 
     suspend fun addExpense(expense: ExpenseCreate)
+    suspend fun updateGroup(groupId: Int, name: String, description: String, users: List<User>, imageBase64: String): Group?
 }
 
 class GroupRepositoryImpl : GroupRepository {
@@ -76,16 +81,19 @@ class GroupRepositoryImpl : GroupRepository {
             "",
             listOf(u1, u2),
             listOf(e1, e2),
-            0f
+            0f,
+            null
         )
 
         return g1
     }
 
     override suspend fun getAllGroups(): List<GroupCompact> {
+        delay(200)
+
         return mutableListOf(
-            GroupCompact(0, "Vacation to Prague", "", -400),
-            GroupCompact(1, "Household", "", 2500),
+            GroupCompact(0, "Vacation to Prague", "", -400, null),
+            GroupCompact(1, "Household", "", 2500, null),
         )
     }
 
@@ -96,7 +104,34 @@ class GroupRepositoryImpl : GroupRepository {
             description = description,
             users = users,
             expenses = listOf(),
-            status = 0f
+            status = 0f,
+            null
+        )
+    }
+
+    override suspend fun updateGroup(
+        groupId: Int,
+        name: String,
+        description: String,
+        users: List<User>,
+        imageBase64: String
+    ): Group? {
+        // Source - https://stackoverflow.com/a
+        // Posted by jagadishlakkurcom jagadishlakk
+        // Retrieved 2025-11-15, License - CC BY-SA 4.0
+
+        val imageBytes = Base64.decode(imageBase64, Base64.DEFAULT)
+        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+
+        return Group(
+            id = groupId,
+            name = name,
+            description = description,
+            users = users,
+            expenses = listOf(),
+            status = 0f,
+            image = bitmap.asImageBitmap()
         )
     }
 

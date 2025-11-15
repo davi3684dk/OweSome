@@ -4,7 +4,7 @@ import com.owesome.data.repository.GroupRepository
 import com.owesome.data.repository.GroupRepositoryImpl
 import com.owesome.data.repository.UserRepository
 import com.owesome.data.repository.UserRepositoryImpl
-import com.owesome.ui.viewmodels.CreateGroupViewModel
+import com.owesome.ui.viewmodels.GroupEditorViewModel
 import com.owesome.ui.viewmodels.GroupViewModel
 import com.owesome.ui.viewmodels.NavViewModel
 import com.owesome.ui.viewmodels.AddUserViewModel
@@ -19,7 +19,7 @@ import org.koin.dsl.module
 val appModule = module {
     viewModelOf(::GroupViewModel)
     viewModelOf(::AddUserViewModel)
-    viewModelOf(::CreateGroupViewModel)
+    viewModelOf(::GroupEditorViewModel)
     singleOf(::GroupRepositoryImpl) bind GroupRepository::class
     singleOf(::UserRepositoryImpl) bind UserRepository::class
     viewModel { NavViewModel() }
