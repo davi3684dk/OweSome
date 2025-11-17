@@ -63,7 +63,10 @@ fun GroupsScreen(
 
     LaunchedEffect(Unit) {
         println(navViewModel.title.value)
-        viewModel.getAllGroups()
+
+        if (viewModel.groups.isEmpty())
+            viewModel.getAllGroups()
+
         navViewModel.setTitle("Groups")
     }
 
