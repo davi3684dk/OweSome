@@ -40,7 +40,10 @@ data class GroupDTO(
     val status: Float,
 
     @SerializedName("members")
-    val members: List<UserDTO>
+    val members: List<UserDTO>,
+
+    @SerializedName("expenses")
+    val expenses: List<ExpenseDTO>
 )
 
 data class GroupResponseDTO(

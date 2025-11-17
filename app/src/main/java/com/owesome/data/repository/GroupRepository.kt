@@ -15,6 +15,7 @@ import com.owesome.data.entities.User
 import com.owesome.util.ImageUtil
 import kotlinx.coroutines.delay
 import java.lang.Exception
+import kotlin.math.exp
 
 interface GroupRepository {
     suspend fun getAllGroups(): List<GroupCompact>
@@ -31,8 +32,6 @@ class GroupRepositoryImpl(
     val groupApiService: GroupApiService
 ) : GroupRepository {
     override suspend fun getGroup(groupId: String): Group? {
-        delay(200)
-
         val response = groupApiService.getGroup(groupId)
         if (response != null) {
 
@@ -48,7 +47,34 @@ class GroupRepositoryImpl(
                         phone = it.phone
                     )
                 },
-                expenses = listOf(),
+                expenses = response.expenses.map { expense ->
+                    Expense(
+                        id = expense.id,
+                        amount = expense.amount,
+                        description = expense.description,
+                        groupId = response.id,
+                        paidBy = User(
+                            id = expense.paidBy.id,
+                            username = expense.paidBy.username,
+                            email = expense.paidBy.email,
+                            phone = expense.paidBy.phone
+                        ),
+                        split = expense.expenseShares.map {
+                            ExpenseShare(
+                                id = it.id,
+                                expenseId = expense.id,
+                                owedBy = User(
+                                    id = it.user.id,
+                                    username = it.user.username,
+                                    email = it.user.email,
+                                    phone = it.user.phone
+                                ),
+                                amount = it.amount
+                            )
+                        },
+                        status = expense.status
+                    )
+                },
                 status = response.status,
                 image = ImageUtil.decodeBase64ToImageBitmap(response.image)
             )
@@ -56,71 +82,9 @@ class GroupRepositoryImpl(
         } else {
             return null
         }
-
-        /*val u1 = User(
-            0,
-            "Bob",
-            "bob@email.com",
-            "12345678"
-        )
-
-        val u2 = User(
-            1,
-            "Alice",
-            "alice@email.com",
-            "12345678"
-        )
-
-        val es1 = ExpenseShare(
-            0,
-            0,
-            u1,
-            500
-        )
-
-        val es2 = ExpenseShare(
-            1,
-            1,
-            u2,
-            500
-        )
-
-        val e1 = Expense(
-            0,
-            1000f,
-            "Drinks",
-            0,
-            u2,
-            listOf(es1),
-            -500f
-        )
-
-        val e2 = Expense(
-            1,
-            1200f,
-            "Hotel",
-            0,
-            u1,
-            listOf(es2),
-            500f
-        )
-
-        val g1 = Group(
-            "0",
-            "Vacation to Prague",
-            "",
-            listOf(u1, u2),
-            listOf(e1, e2),
-            0f,
-            null
-        )
-
-        return g1*/
     }
 
     override suspend fun getAllGroups(): List<GroupCompact> {
-        delay(2000)
-
         val response = groupApiService.getGroups()
         return response.groups?.map {
             GroupCompact(
@@ -131,12 +95,6 @@ class GroupRepositoryImpl(
                 image = ImageUtil.decodeBase64ToImageBitmap(it.image)
             )
         } ?: listOf()
-
-        /*
-        return mutableListOf(
-            GroupCompact(0, "Vacation to Prague", "", -400, null),
-            GroupCompact(1, "Household", "", 2500, null),
-        )*/
     }
 
     override suspend fun createGroup(name: String, description: String, users: List<User>, imageBase64: String): Group? {
@@ -158,17 +116,26 @@ class GroupRepositoryImpl(
                     println(e.localizedMessage)
                 }
             }
+
+            return Group(
+                id = response.group.id,
+                name = response.group.name,
+                description = response.group.description,
+                users = response.group.members.map {
+                    User(
+                        id = it.id,
+                        username = it.username,
+                        email = it.email,
+                        phone = it.phone
+                    )
+                },
+                expenses = listOf(),
+                status = 0f,
+                image = ImageUtil.decodeBase64ToImageBitmap(response.group.image)
+            )
         }
 
-        return Group(
-            id = "0",
-            name = name,
-            description = description,
-            users = users,
-            expenses = listOf(),
-            status = 0f,
-            null
-        )
+        return null
     }
 
     override suspend fun updateGroup(
