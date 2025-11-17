@@ -7,6 +7,7 @@ import com.owesome.data.entities.GroupCompact
 import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -22,4 +23,7 @@ interface GroupApiService {
 
     @POST("/groups/{id}/add-member")
     suspend fun addMember(@Path("id") groupId: String, @Body user: AddMemberDTO): ResponseBody
+
+    @PATCH("/groups/{id}")
+    suspend fun updateGroup(@Path("id") groupId: String, @Body group: UpdateGroupDTO): GroupResponseDTO?
 }

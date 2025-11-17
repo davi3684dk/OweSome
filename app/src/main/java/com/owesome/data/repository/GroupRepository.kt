@@ -6,6 +6,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import com.owesome.data.api.GroupApiService
 import com.owesome.data.api.dto.AddMemberDTO
 import com.owesome.data.api.dto.CreateGroupDTO
+import com.owesome.data.api.dto.UpdateGroupDTO
+import com.owesome.data.api.mappers.toCompactGroup
+import com.owesome.data.api.mappers.toGroup
 import com.owesome.data.entities.Expense
 import com.owesome.data.entities.ExpenseCreate
 import com.owesome.data.entities.ExpenseShare
@@ -33,67 +36,13 @@ class GroupRepositoryImpl(
 ) : GroupRepository {
     override suspend fun getGroup(groupId: String): Group? {
         val response = groupApiService.getGroup(groupId)
-        if (response != null) {
-
-            return Group(
-                id = response.id,
-                name = response.name,
-                description = response.description,
-                users = response.members.map {
-                    User(
-                        id = it.id,
-                        username = it.username,
-                        email = it.email,
-                        phone = it.phone
-                    )
-                },
-                expenses = response.expenses.map { expense ->
-                    Expense(
-                        id = expense.id,
-                        amount = expense.amount,
-                        description = expense.description,
-                        groupId = response.id,
-                        paidBy = User(
-                            id = expense.paidBy.id,
-                            username = expense.paidBy.username,
-                            email = expense.paidBy.email,
-                            phone = expense.paidBy.phone
-                        ),
-                        split = expense.expenseShares.map {
-                            ExpenseShare(
-                                id = it.id,
-                                expenseId = expense.id,
-                                owedBy = User(
-                                    id = it.user.id,
-                                    username = it.user.username,
-                                    email = it.user.email,
-                                    phone = it.user.phone
-                                ),
-                                amount = it.amount
-                            )
-                        },
-                        status = expense.status
-                    )
-                },
-                status = response.status,
-                image = ImageUtil.decodeBase64ToImageBitmap(response.image)
-            )
-
-        } else {
-            return null
-        }
+        return response?.toGroup()
     }
 
     override suspend fun getAllGroups(): List<GroupCompact> {
         val response = groupApiService.getGroups()
         return response.groups?.map {
-            GroupCompact(
-                id = it.id,
-                name = it.name,
-                description = it.description,
-                status = it.status,
-                image = ImageUtil.decodeBase64ToImageBitmap(it.image)
-            )
+            it.toCompactGroup()
         } ?: listOf()
     }
 
@@ -138,23 +87,13 @@ class GroupRepositoryImpl(
         users: List<User>,
         imageBase64: String
     ): Group? {
-        // Source - https://stackoverflow.com/a
-        // Posted by jagadishlakkurcom jagadishlakk
-        // Retrieved 2025-11-15, License - CC BY-SA 4.0
 
-        val imageBytes = Base64.decode(imageBase64, Base64.DEFAULT)
-        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-
-
-        return Group(
-            id = groupId,
+        val response = groupApiService.updateGroup(groupId, UpdateGroupDTO(
             name = name,
-            description = description,
-            users = users,
-            expenses = listOf(),
-            status = 0f,
-            image = bitmap.asImageBitmap()
-        )
+            image = imageBase64,
+            description = description
+        ))
+        return response?.group?.toGroup()
     }
 
     override suspend fun addUser(groupId: String, userId: Int) {

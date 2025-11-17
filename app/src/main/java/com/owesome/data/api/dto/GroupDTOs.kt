@@ -57,7 +57,17 @@ data class CreateGroupDTO(
     val profileImage: String
 )
 
+data class UpdateGroupDTO(
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("profile_image")
+    val image: String,
+    @SerializedName("description")
+    val description: String
+)
+
 data class AddMemberDTO(
     @SerializedName("user_id")
     val userId: Int
 )
+
