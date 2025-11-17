@@ -121,14 +121,7 @@ class GroupRepositoryImpl(
                 id = response.group.id,
                 name = response.group.name,
                 description = response.group.description,
-                users = response.group.members.map {
-                    User(
-                        id = it.id,
-                        username = it.username,
-                        email = it.email,
-                        phone = it.phone
-                    )
-                },
+                users = users,
                 expenses = listOf(),
                 status = 0f,
                 image = ImageUtil.decodeBase64ToImageBitmap(response.group.image)
