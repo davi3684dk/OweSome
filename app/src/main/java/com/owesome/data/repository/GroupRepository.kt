@@ -31,14 +31,14 @@ class GroupRepositoryImpl : GroupRepository {
             0,
             "Bob",
             "bob@email.com",
-            12345678
+            "12345678"
         )
 
         val u2 = User(
             1,
             "Alice",
             "alice@email.com",
-            12345678
+            "12345678"
         )
 
         val es1 = ExpenseShare(

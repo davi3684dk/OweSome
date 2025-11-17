@@ -11,6 +11,7 @@ import com.owesome.ui.viewmodels.GroupViewModel
 import com.owesome.ui.viewmodels.NavViewModel
 import com.owesome.ui.viewmodels.AddUserViewModel
 import com.owesome.notifications.NotificationFacade
+import com.owesome.ui.viewmodels.LoginViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
@@ -20,6 +21,8 @@ import org.koin.dsl.module
 
 val appModule = module {
     viewModelOf(::GroupViewModel)
+    viewModelOf(::LoginViewModel)
+    //viewModelOf(::RegisterViewModel)
     singleOf(::AuthManager)
     singleOf(::RetroFitClient)
     viewModelOf(::AddUserViewModel)

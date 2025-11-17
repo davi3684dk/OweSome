@@ -24,6 +24,12 @@ class AuthManager(context: Context) {
         }
     }
 
+    fun clearTokens() {
+        prefs.edit {
+            clear()
+        }
+    }
+
     fun notifyLoginRequired() {
         CoroutineScope(Dispatchers.Main).launch {
             _loginRequired.emit(Unit)

@@ -1,6 +1,8 @@
 package com.owesome.data.api
 
+import com.google.gson.annotations.SerializedName
 import com.owesome.data.entities.UserCreate
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -10,8 +12,42 @@ interface AuthApiService {
     fun refreshToken(): Call<RefreshResponse>
 
     @POST("/auth/login")
-    fun login(@Body username: String, @Body password: String)
+    suspend fun login(@Body loginRequest: LoginRequest): LoginResponse
 
     @POST("/auth/register")
-    fun register(@Body userRequest: UserCreate)
+    suspend fun register(@Body userRequest: RegisterRequest): ResponseBody
+
+    @POST("/auth/logout")
+    suspend fun logout(): ResponseBody
 }
+
+data class LoginRequest(
+    val username: String,
+    val password: String
+)
+
+data class RegisterRequest(
+    val username: String,
+    val email: String,
+    val password: String,
+    val phone: String
+)
+
+data class LoginResponse(
+    @SerializedName("access_token")
+    val accessToken: String,
+    @SerializedName("refresh_token")
+    val refreshToken: String,
+    val user: UserDTO
+)
+
+data class UserDTO(
+    @SerializedName("ID")
+    val id: Int,
+    @SerializedName("Username")
+    val username: String,
+    @SerializedName("Email")
+    val email: String,
+    @SerializedName("Phone")
+    val phone: String
+)
