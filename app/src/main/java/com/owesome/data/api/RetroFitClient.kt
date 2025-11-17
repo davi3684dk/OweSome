@@ -1,5 +1,6 @@
 package com.owesome.data.api
 
+import com.google.gson.annotations.SerializedName
 import com.owesome.BuildConfig
 import com.owesome.data.auth.AuthManager
 import okhttp3.Authenticator
@@ -19,7 +20,7 @@ class RetroFitClient(authManager: AuthManager) {
         val baseUrl = BuildConfig.BACKEND_URL
 
         val refreshOkHttpClient = OkHttpClient.Builder()
-            .addInterceptor(RetryInterceptor(10))
+            .addInterceptor(RetryInterceptor(4))
             .addInterceptor(RefreshTokenInterceptor(authManager))
             .build()
 
@@ -32,7 +33,7 @@ class RetroFitClient(authManager: AuthManager) {
         val refreshService = refreshRetrofit.create(AuthApiService::class.java)
 
         val okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(RetryInterceptor(10))
+            .addInterceptor(RetryInterceptor(4))
             .addInterceptor(AccessTokenInterceptor(authManager))
             .authenticator(TokenAuthenticator(authManager, refreshService))
             .build()
@@ -58,7 +59,7 @@ class RefreshTokenInterceptor(private val authManager: AuthManager): Interceptor
         val token = authManager.getRefreshToken()
         val request = if (token != null) {
             chain.request().newBuilder()
-                .addHeader("Authorization", "Bearer $token")
+                .addHeader("Cookie", "refresh_token=$token")
                 .build()
         } else {
             chain.request()
@@ -72,7 +73,7 @@ class AccessTokenInterceptor(private val authManager: AuthManager): Interceptor 
         val token = authManager.getAccessToken()
         val request = if (token != null) {
             chain.request().newBuilder()
-                .addHeader("Authorization", "Bearer $token")
+                .addHeader("Cookie", "jwt=$token")
                 .build()
         } else {
             chain.request()
@@ -92,7 +93,7 @@ class TokenAuthenticator(
             val newTokens  = refreshResponse.body() ?: return null
             authManager.saveAccessTokens(newTokens.accessToken, newTokens.refreshToken)
             response.request.newBuilder()
-                .header("Authorization", "Bearer ${newTokens.accessToken}")
+                .header("Cookie", "jwt=${newTokens.accessToken}")
                 .build()
         } else {
             authManager.notifyLoginRequired()
@@ -119,4 +120,9 @@ class RetryInterceptor(private val maxRetries: Int = 3): Interceptor {
     }
 }
 
-data class RefreshResponse(val accessToken: String, val refreshToken: String)
+data class RefreshResponse(
+    @SerializedName("access_token")
+    val accessToken: String,
+    @SerializedName("refresh_token")
+    val refreshToken: String
+)
