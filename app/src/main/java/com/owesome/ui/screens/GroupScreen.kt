@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +18,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -41,6 +44,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
+import com.owesome.Screen
 import com.owesome.data.entities.Expense
 import com.owesome.ui.viewmodels.GroupViewModel
 import com.owesome.ui.viewmodels.NavViewModel
@@ -48,7 +54,7 @@ import org.koin.compose.viewmodel.koinActivityViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewModel: NavViewModel = koinActivityViewModel(), groupId: String) {
+fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewModel: NavViewModel = koinActivityViewModel(), navigation: NavController, groupId: String) {
     val group by viewModel.currentGroup.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val state = rememberPullToRefreshState()
@@ -57,10 +63,14 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
         //Only fetch if group isn't already loaded
         if (groupId != group.id.toString())
             viewModel.setGroup(groupId)
+
+        navViewModel.settingsPressed.collect {
+            navigation.navigate(Screen.EditGroup.route)
+        }
     }
 
     LaunchedEffect(group) {
-        navViewModel.setTitle(group.name)
+        navViewModel.setTitle(group.name, Icons.Default.Settings)
     }
 
     PullToRefreshBox(

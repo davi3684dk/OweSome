@@ -54,11 +54,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.owesome.data.auth.AuthManager
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
 import com.owesome.di.appModule
 import com.owesome.ui.screens.CreateGroupScreen
 import com.owesome.notifications.NotificationFacade
+import com.owesome.ui.screens.EditGroupScreen
 import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.screens.LoginScreen
@@ -116,9 +118,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OweSome(
-    viewModel: NavViewModel = koinActivityViewModel()
-) {
+fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: AuthManager = koinInject()) {
     val navController = rememberNavController()
 
     var loggedInUser by remember { mutableStateOf<UserCreate?>(null) }
@@ -126,6 +126,12 @@ fun OweSome(
     var selectedDestination by rememberSaveable { mutableStateOf(Screen.Groups.route) }
 
     val headerTitle by viewModel.title.collectAsState()
+
+    LaunchedEffect(Unit) {
+        authManager.loginRequired.collect {
+            //TODO navController.navigate()
+        }
+    }
 
     viewModel.setTitle("Test")
     val notificationFacade = koinInject<NotificationFacade>()
@@ -148,7 +154,20 @@ fun OweSome(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Localized description"
                             )
-                        } },
+                        }
+                    },
+                    actions = {
+                        viewModel.settingsIcon?.let {
+                            IconButton(onClick = {
+                                viewModel.settingsPressed()
+                            }) {
+                                Icon(
+                                    imageVector = viewModel.settingsIcon!!,
+                                    contentDescription = "Localized description"
+                                )
+                            }
+                        }
+                    }
                     /*modifier = Modifier.dropShadow(
                        shape = RoundedCornerShape(0.dp),
                        shadow = Shadow(
@@ -213,13 +232,17 @@ fun OweSome(
                         Screen.GroupDetails.route
                     ) { backStackEntry ->
                         val groupId = backStackEntry.arguments?.getString("groupId")
-                        groupId?.let { id ->
-                            GroupScreen(groupId = id)
+                        groupId?.let {id ->
+                            GroupScreen(groupId = id, navigation = navController)
                         }
                     }
 
                     composable(Screen.CreateGroup.route) {
                         CreateGroupScreen(navigation = navController)
+                    }
+
+                    composable(Screen.EditGroup.route) {
+                        EditGroupScreen(navigation = navController)
                     }
                 }
             }
@@ -236,6 +259,7 @@ sealed class Screen(
     object Profile : Screen("profile", "Profile")
     object Settings : Screen("settings", "Settings")
     object CreateGroup : Screen("createGroup", "Create Group")
+    object EditGroup : Screen("editGroup", "Edit Group")
     object Login : Screen("login", "Login")
     object Register: Screen("register", "Register")
 

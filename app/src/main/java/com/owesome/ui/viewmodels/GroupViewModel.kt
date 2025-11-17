@@ -1,5 +1,8 @@
 package com.owesome.ui.viewmodels
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.res.imageResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.owesome.data.entities.Expense
@@ -14,25 +17,25 @@ import kotlinx.coroutines.launch
 
 class GroupViewModel(private val repository: GroupRepository): ViewModel() {
     private var _currentGroup = MutableStateFlow(Group(
-        0, "", "", listOf(), listOf(), 0f
+        -1, "", "", listOf(), listOf(), 0f, null
     ))
     val currentGroup: StateFlow<Group> get() = _currentGroup
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    fun getAllGroups(): List<GroupCompact> {
-        val groups: MutableList<GroupCompact> = mutableListOf()
+    var groups = mutableStateListOf<GroupCompact>()
+        private set
+
+
+    fun getAllGroups() {
         _isLoading.value = true
         viewModelScope.launch {
             val rawGroups = repository.getAllGroups()
-            if (rawGroups.isEmpty()) {
-                return@launch
-            }
+            groups.clear()
             groups.addAll(rawGroups)
             _isLoading.value = false
         }
-        return groups
     }
 
     fun setGroup(groupId: String) {
