@@ -9,6 +9,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.HttpException
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -19,7 +20,13 @@ class RetroFitClient(authManager: AuthManager) {
     private val retrofit by lazy {
         val baseUrl = BuildConfig.BACKEND_URL
 
+        val logging = HttpLoggingInterceptor()
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+
+
+
         val refreshOkHttpClient = OkHttpClient.Builder()
+            .addInterceptor(logging)
             .addInterceptor(RetryInterceptor(4))
             .addInterceptor(RefreshTokenInterceptor(authManager))
             .build()
@@ -33,6 +40,7 @@ class RetroFitClient(authManager: AuthManager) {
         val refreshService = refreshRetrofit.create(AuthApiService::class.java)
 
         val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor(logging)
             .addInterceptor(RetryInterceptor(4))
             .addInterceptor(AccessTokenInterceptor(authManager))
             .authenticator(TokenAuthenticator(authManager, refreshService))
@@ -51,6 +59,10 @@ class RetroFitClient(authManager: AuthManager) {
 
     val authApi: AuthApiService by lazy {
         retrofit.create(AuthApiService::class.java)
+    }
+
+    val userApi: UserApiService by lazy {
+        retrofit.create(UserApiService::class.java)
     }
 }
 

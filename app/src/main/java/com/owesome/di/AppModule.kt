@@ -28,6 +28,7 @@ val appModule = module {
     singleOf(::UserRepositoryImpl) bind UserRepository::class
     single { get<RetroFitClient>().groupApi }
     single { get<RetroFitClient>().authApi }
+    single { get<RetroFitClient>().userApi }
     viewModel { NavViewModel() }
     single { NotificationFacade(androidContext()) }
 }
