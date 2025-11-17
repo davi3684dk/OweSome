@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class GroupEditorUiState {
-    var groupId by mutableIntStateOf(-1)
+    var groupId by mutableStateOf("")
     var groupName by mutableStateOf("")
     var groupImage by mutableStateOf<ImageBitmap?>(null)
     var imageError by mutableStateOf(false)
@@ -88,7 +88,8 @@ class GroupEditorViewModel(
             val newGroup = groupRepository.createGroup(
                 name = uiState.groupName,
                 description = "",
-                users = uiState.users
+                users = uiState.users,
+                imageBase64 = if (uiState.groupImage != null) ImageUtil.imageBitmapToBase64(uiState.groupImage!!) ?: "" else ""
             )
             if (newGroup != null) {
                 _onComplete.send(newGroup)

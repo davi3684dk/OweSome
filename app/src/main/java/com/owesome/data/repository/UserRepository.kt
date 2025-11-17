@@ -1,23 +1,30 @@
 package com.owesome.data.repository
 
+import com.owesome.data.api.UserApiService
 import com.owesome.data.entities.User
 import kotlinx.coroutines.delay
-import kotlin.random.Random
-import kotlin.random.nextInt
 
 interface UserRepository {
-    suspend fun getUserByName(username: String): User?
+    suspend fun getUserIdByName(username: String): User?
 }
 
-class UserRepositoryImpl : UserRepository {
-    override suspend fun getUserByName(username: String): User? {
+class UserRepositoryImpl(
+    val userApiService: UserApiService
+) : UserRepository {
+    override suspend fun getUserIdByName(username: String): User? {
         delay(500)
 
-        return User(
-            id = Random.nextInt(100000),
-            username = username,
-            email = "${username}@gmail.com",
-            phone = 12345678
-        )
+        val response = userApiService.findUserByName(username)
+
+        return if (response != null) {
+            User(
+                id = response.id,
+                username = response.username,
+                email = response.email,
+                phone = response.phone
+            )
+        } else {
+            null
+        }
     }
 }

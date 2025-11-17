@@ -51,7 +51,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.owesome.data.api.AuthApiService
+import com.owesome.data.api.LoginRequest
+import com.owesome.data.api.LoginResponse
+import com.owesome.data.api.RegisterRequest
 import com.owesome.data.auth.AuthManager
+import com.owesome.data.entities.UserCreate
 import com.owesome.di.appModule
 import com.owesome.ui.screens.CreateGroupScreen
 import com.owesome.notifications.NotificationFacade
@@ -60,11 +65,16 @@ import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
+import kotlinx.coroutines.delay
+import okhttp3.ResponseBody
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 import org.koin.core.context.startKoin
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 
 class MainActivity : ComponentActivity() {
@@ -100,8 +110,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
-
         enableEdgeToEdge()
         setContent {
             OweSome()
@@ -117,7 +125,58 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
 
     val headerTitle by viewModel.title.collectAsState()
 
+    val service: AuthApiService = koinInject()
+
     LaunchedEffect(Unit) {
+        /*service.register(RegisterRequest(
+            username = "david",
+            email = "david@email.com",
+            password = "123456",
+            phone = "12345678"
+        )).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(
+                call: Call<ResponseBody?>,
+                response: Response<ResponseBody?>
+            ) {
+
+            }
+
+            override fun onFailure(
+                call: Call<ResponseBody?>,
+                t: Throwable
+            ) {
+
+            }
+        })*/
+
+
+        service.login(
+            LoginRequest(
+            "david",
+            "123456"
+            )
+        ).enqueue(object : Callback<LoginResponse> {
+            override fun onResponse(
+                call: Call<LoginResponse?>,
+                response: Response<LoginResponse?>
+            ) {
+                val body = response.body()
+                if (body != null) {
+                    authManager.saveAccessTokens(
+                        accessToken = "body.accessToken",
+                        refreshToken = body.refreshToken
+                    )
+                }
+            }
+
+            override fun onFailure(
+                call: Call<LoginResponse?>,
+                t: Throwable
+            ) {
+                TODO("Not yet implemented")
+            }
+        })
+
         authManager.loginRequired.collect {
             //TODO navController.navigate()
         }
@@ -245,6 +304,6 @@ sealed class Screen(
     object EditGroup : Screen("editGroup", "Edit Group")
 
     object GroupDetails : Screen("groupDetails/{groupId}", null) {
-        fun createRoute(groupId: Int) = "groupDetails/$groupId"
+        fun createRoute(groupId: String) = "groupDetails/$groupId"
     }
 }
