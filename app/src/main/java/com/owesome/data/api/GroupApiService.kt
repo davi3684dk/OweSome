@@ -20,6 +20,6 @@ interface GroupApiService {
     @POST("/groups")
     suspend fun createGroup(@Body group: CreateGroupDTO): GroupResponseDTO?
 
-    @POST("/groups/{id}/addmember")
+    @POST("/groups/{id}/add-member")
     suspend fun addMember(@Path("id") groupId: String, @Body user: AddMemberDTO): ResponseBody
 }
