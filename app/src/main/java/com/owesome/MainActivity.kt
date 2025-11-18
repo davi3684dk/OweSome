@@ -10,15 +10,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
@@ -28,28 +25,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.shadow.Shadow
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.owesome.di.appModule
 import com.owesome.ui.screens.CreateGroupScreen
@@ -57,6 +41,7 @@ import com.owesome.notifications.NotificationFacade
 import com.owesome.ui.screens.EditGroupScreen
 import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
+import com.owesome.ui.screens.ProfileScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
 import org.koin.android.ext.koin.androidContext
@@ -220,6 +205,9 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel()) {
 
                     composable(Screen.EditGroup.route) {
                         EditGroupScreen(navigation = navController)
+                    }
+                    composable ( Screen.Profile.route ){
+                        ProfileScreen(navigation = navController)
                     }
                 }
             }
