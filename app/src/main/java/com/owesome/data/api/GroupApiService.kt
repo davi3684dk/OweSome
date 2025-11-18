@@ -24,6 +24,9 @@ interface GroupApiService {
     @POST("/groups/{id}/add-member")
     suspend fun addMember(@Path("id") groupId: String, @Body user: AddMemberDTO): ResponseBody
 
+    @POST("/groups/{id}/remove-member")
+    suspend fun removeMember(@Path("id") groupId: String, @Body user: AddMemberDTO): ResponseBody
+
     @PATCH("/groups/{id}")
     suspend fun updateGroup(@Path("id") groupId: String, @Body group: UpdateGroupDTO): GroupResponseDTO?
 }

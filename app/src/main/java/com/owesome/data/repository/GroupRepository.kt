@@ -28,7 +28,7 @@ interface GroupRepository {
     suspend fun addUser(groupId: String, userId: Int)
 
     suspend fun addExpense(expense: ExpenseCreate)
-    suspend fun updateGroup(groupId: String, name: String, description: String, users: List<User>, imageBase64: String): Group?
+    suspend fun updateGroup(groupId: String, name: String, description: String, addedUsers: List<Int>, removedUsers: List<Int>, imageBase64: String): Group?
 }
 
 class GroupRepositoryImpl(
@@ -84,7 +84,8 @@ class GroupRepositoryImpl(
         groupId: String,
         name: String,
         description: String,
-        users: List<User>,
+        addedUsers: List<Int>,
+        removedUsers: List<Int>,
         imageBase64: String
     ): Group? {
 
@@ -93,6 +94,15 @@ class GroupRepositoryImpl(
             image = imageBase64,
             description = description
         ))
+
+        for (user in addedUsers) {
+            groupApiService.addMember(groupId, AddMemberDTO(user))
+        }
+
+        for (user in removedUsers) {
+            groupApiService.removeMember(groupId, AddMemberDTO(user))
+        }
+
         return response?.group?.toGroup()
     }
 

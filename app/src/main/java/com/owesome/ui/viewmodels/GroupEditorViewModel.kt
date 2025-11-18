@@ -41,6 +41,9 @@ class GroupEditorViewModel(
     private val _onComplete = Channel<Group>()
     val onComplete = _onComplete.receiveAsFlow()
 
+    var removedUsers = mutableStateListOf<Int>()
+    var addedUsers = mutableStateListOf<Int>()
+
     fun setGroup(group: Group) {
         uiState.groupName = group.name
         uiState.groupId = group.id
@@ -76,8 +79,11 @@ class GroupEditorViewModel(
     }
 
     fun addUser(user: User) {
-        if (!uiState.users.contains(user))
+        if (!uiState.users.contains(user)) {
             uiState. users.add(user)
+            addedUsers.add(user.id)
+            removedUsers.remove(user.id)
+        }
     }
 
     fun createGroup() {
@@ -108,11 +114,12 @@ class GroupEditorViewModel(
             }
 
             val updatedGroup = groupRepository.updateGroup(
-                uiState.groupId,
-                uiState.groupName,
-                "",
-                uiState.users,
-                groupImage
+                groupId = uiState.groupId,
+                name = uiState.groupName,
+                description = "",
+                addedUsers = addedUsers,
+                removedUsers = removedUsers,
+                imageBase64 = groupImage
             )
             if (updatedGroup != null) {
                 _onComplete.send(updatedGroup)
@@ -122,5 +129,7 @@ class GroupEditorViewModel(
 
     fun removeUser(user: User) {
         uiState.users.remove(user)
+        removedUsers.add(user.id)
+        addedUsers.remove(user.id)
     }
 }
