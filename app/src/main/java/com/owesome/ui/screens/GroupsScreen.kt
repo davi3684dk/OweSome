@@ -84,6 +84,8 @@ fun GroupsScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top,
+                reverseLayout = true
             ) {
                 items(viewModel.groups) { group ->
                     Card(
