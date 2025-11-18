@@ -3,6 +3,7 @@ package com.owesome.data.repository
 import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.compose.ui.graphics.asImageBitmap
+import coil.network.HttpException
 import com.owesome.data.api.GroupApiService
 import com.owesome.data.api.dto.AddMemberDTO
 import com.owesome.data.api.dto.CreateGroupDTO
@@ -36,14 +37,20 @@ class GroupRepositoryImpl(
 ) : GroupRepository {
     override suspend fun getGroup(groupId: String): Group? {
         val response = groupApiService.getGroup(groupId)
-        return response?.toGroup()
+        return if (response.isSuccessful)
+            response.body()?.toGroup()
+        else
+            null
     }
 
     override suspend fun getAllGroups(): List<GroupCompact> {
         val response = groupApiService.getGroups()
-        return response.groups?.map {
-            it.toCompactGroup()
-        } ?: listOf()
+        return if (response.isSuccessful)
+            response.body()?.groups?.map {
+                it.toCompactGroup()
+            } ?: listOf()
+        else
+            return listOf()
     }
 
     override suspend fun createGroup(name: String, description: String, users: List<User>, imageBase64: String): Group? {
@@ -56,24 +63,26 @@ class GroupRepositoryImpl(
             )
         )
 
-        if (response?.group != null) {
+        if (response.isSuccessful && response.body()?.group != null) {
+            val group = response.body()!!.group
+
             //Add users
             for (user in users) {
                 try {
-                    groupApiService.addMember(response.group.id, AddMemberDTO(user.id))
+                    groupApiService.addMember(group.id, AddMemberDTO(user.id))
                 } catch (e: Exception) {
                     println(e.localizedMessage)
                 }
             }
 
             return Group(
-                id = response.group.id,
-                name = response.group.name,
-                description = response.group.description,
+                id = group.id,
+                name = group.name,
+                description = group.description,
                 users = users,
                 expenses = listOf(),
                 status = 0f,
-                image = ImageUtil.decodeBase64ToImageBitmap(response.group.image)
+                image = ImageUtil.decodeBase64ToImageBitmap(group.image)
             )
         }
 
@@ -103,7 +112,12 @@ class GroupRepositoryImpl(
             groupApiService.removeMember(groupId, AddMemberDTO(user))
         }
 
-        return response?.group?.toGroup()
+        return if (response.isSuccessful && response.body()?.group != null) {
+            response.body()!!.group.toGroup()
+        } else {
+            null
+        }
+
     }
 
     override suspend fun addUser(groupId: String, userId: Int) {

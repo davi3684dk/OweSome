@@ -1,21 +1,29 @@
 package com.owesome.data.api
 
+import android.app.Activity
+import android.content.Context
+import android.widget.Toast
 import com.google.gson.annotations.SerializedName
 import com.owesome.BuildConfig
 import com.owesome.data.auth.AuthManager
+import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.Route
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.compose.koinInject
 import retrofit2.HttpException
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.ConnectException
+import java.util.concurrent.TimeUnit
 
-class RetroFitClient(authManager: AuthManager) {
+class RetroFitClient(authManager: AuthManager, context: Context) {
 
     private val retrofit by lazy {
         val baseUrl = BuildConfig.BACKEND_URL
@@ -26,9 +34,10 @@ class RetroFitClient(authManager: AuthManager) {
 
 
         val refreshOkHttpClient = OkHttpClient.Builder()
+            .retryOnConnectionFailure(false)
             .addInterceptor(logging)
-            .addInterceptor(RetryInterceptor(4))
             .addInterceptor(RefreshTokenInterceptor(authManager))
+            .addInterceptor(RetryInterceptor(4, context))
             .build()
 
         val refreshRetrofit = Retrofit.Builder()
@@ -40,10 +49,11 @@ class RetroFitClient(authManager: AuthManager) {
         val refreshService = refreshRetrofit.create(AuthApiService::class.java)
 
         val okHttpClient = OkHttpClient.Builder()
+            .retryOnConnectionFailure(false)
             .addInterceptor(logging)
-            .addInterceptor(RetryInterceptor(4))
             .addInterceptor(AccessTokenInterceptor(authManager))
             .authenticator(TokenAuthenticator(authManager, refreshService))
+            .addInterceptor(RetryInterceptor(4, context))
             .build()
 
         Retrofit.Builder()
@@ -114,21 +124,44 @@ class TokenAuthenticator(
     }
 }
 
-class RetryInterceptor(private val maxRetries: Int = 3): Interceptor {
+class RetryInterceptor(private val maxRetries: Int = 3, private val context: Context): Interceptor {
+
     override fun intercept(chain: Interceptor.Chain): Response {
         var attempt = 0
+        val request = chain.request()
 
-        while (attempt < maxRetries) {
+        var response: Response? = null
+        var responseOk = false
+
+        while (!responseOk && attempt < maxRetries) {
             try {
-                return chain.proceed(chain.request())
-            } catch (e: HttpException) {
-                println(e)
+                response = chain.proceed(request)
+                responseOk = true
             } catch (e: Exception) {
-                attempt++
                 Thread.sleep(500L * attempt)
+                attempt++
+
+                (context as Activity).runOnUiThread {
+                    Toast.makeText(
+                        context,
+                        "Could not connect to server, retrying...",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
-        throw ConnectException("Could not connect, do you have a network connection?")
+
+        if (response != null) {
+            return response
+        } else {
+            return Response.Builder()
+                .code(502)
+                .message("Bad Gateway")
+                .body("".toResponseBody(null))
+                .protocol(Protocol.HTTP_2)
+                .request(chain.request())
+                .build()
+        }
     }
 }
 

@@ -173,7 +173,7 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                 call: Call<LoginResponse?>,
                 t: Throwable
             ) {
-                TODO("Not yet implemented")
+                println(t.message)
             }
         })
 
