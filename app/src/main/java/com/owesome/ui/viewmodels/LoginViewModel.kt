@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.owesome.data.auth.AuthManager
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
 import com.owesome.data.repository.UserRepository
@@ -35,7 +36,8 @@ class LoginUiState {
 }
 
 class LoginViewModel(
-    private val userRepo: UserRepository
+    private val userRepo: UserRepository,
+    private val authManager: AuthManager
 ): ViewModel() {
     var uiState by mutableStateOf(LoginUiState())
         private set
@@ -52,6 +54,7 @@ class LoginViewModel(
                 )
                 // Find out if logged in successful
                 if (newUser != null) {
+                    authManager.loggedInUser = newUser
                     _onComplete.send(newUser)
                 }
                 else {

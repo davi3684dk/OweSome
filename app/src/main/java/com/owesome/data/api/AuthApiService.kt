@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 import com.owesome.data.entities.UserCreate
 import okhttp3.ResponseBody
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -12,13 +13,13 @@ interface AuthApiService {
     fun refreshToken(): Call<RefreshResponse>
 
     @POST("/auth/login")
-    suspend fun login(@Body loginRequest: LoginRequest): LoginResponse
+    suspend fun login(@Body loginRequest: LoginRequest): Response<LoginResponse>
 
     @POST("/auth/register")
-    suspend fun register(@Body userRequest: RegisterRequest): ResponseBody
+    suspend fun register(@Body userRequest: RegisterRequest): Response<Unit>
 
     @POST("/auth/logout")
-    suspend fun logout(): ResponseBody
+    suspend fun logout(): Response<Unit>
 }
 
 data class LoginRequest(

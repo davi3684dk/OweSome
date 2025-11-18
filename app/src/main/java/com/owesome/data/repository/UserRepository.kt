@@ -14,9 +14,9 @@ interface UserRepository {
 
     suspend fun loginUser(username: String, password: String): User?
 
-    suspend fun registerUser(user: UserCreate)
+    suspend fun registerUser(user: UserCreate): Boolean
     suspend fun getUserByName(username: String): User?
-    suspend fun logoutUser()
+    suspend fun logoutUser(): Boolean
 }
 
 class UserRepositoryImpl(
@@ -35,14 +35,21 @@ class UserRepositoryImpl(
                 password = password
             ))
 
-            //TODO: Response validation, did we log in?
-
-            authManager.saveAccessTokens(response.accessToken, response.refreshToken)
-            return User(response.user.id, response.user.username, response.user.email, response.user.phone)
+            //Response validation, did we log in?
+            if (response.isSuccessful) {
+                // Check if response body values are not empty
+                if (response.body() != null) {
+                    authManager.saveAccessTokens(response.body()!!.accessToken, response.body()!!.refreshToken)
+                    return User(response.body()!!.user.id, response.body()!!.user.username, response.body()!!.user.email, response.body()!!.user.phone)
+                }
+                else return null
+            }
+            else return null
         } catch (e: Exception) { return null}
     }
 
-    override suspend fun registerUser(user: UserCreate) {
+    override suspend fun registerUser(user: UserCreate): Boolean {
+
         val response = authApiService.register(userRequest = RegisterRequest(
             username = user.username,
             email = user.email,
@@ -50,7 +57,11 @@ class UserRepositoryImpl(
             phone = user.phone
         ))
 
-        //TODO: Response validation, did we actually register?
+        //Response validation, did we actually register?
+        if (response.isSuccessful) {
+            return true
+        }
+        else return false
     }
 
     override suspend fun getUserByName(username: String): User? {
@@ -64,11 +75,15 @@ class UserRepositoryImpl(
         )
     }
 
-    override suspend fun logoutUser() {
+    override suspend fun logoutUser(): Boolean {
         val response = authApiService.logout()
 
-        //TODO: Response validation, are we actually logged out?
+        //Response validation, are we actually logged out?
+        if (response.isSuccessful){
+            authManager.clearTokens()
+            return true
+        }
+        else return false
 
-        authManager.clearTokens()
     }
 }
