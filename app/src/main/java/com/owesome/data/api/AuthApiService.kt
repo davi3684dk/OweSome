@@ -1,9 +1,11 @@
 package com.owesome.data.api
 
 import com.google.gson.annotations.SerializedName
+import com.owesome.data.api.dto.UserDTO
 import com.owesome.data.entities.UserCreate
 import okhttp3.ResponseBody
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -12,10 +14,13 @@ interface AuthApiService {
     fun refreshToken(): Call<RefreshResponse>
 
     @POST("/auth/login")
-    fun login(@Body loginRequest: LoginRequest): Call<LoginResponse>
+    suspend fun login(@Body loginRequest: LoginRequest): Response<LoginResponse>
 
     @POST("/auth/register")
-    fun register(@Body userRequest: RegisterRequest): Call<ResponseBody>
+    suspend fun register(@Body userRequest: RegisterRequest): Response<Unit>
+
+    @POST("/auth/logout")
+    suspend fun logout(): Response<Unit>
 }
 
 data class LoginRequest(
@@ -35,4 +40,5 @@ data class LoginResponse(
     val accessToken: String,
     @SerializedName("refresh_token")
     val refreshToken: String,
+    val user: UserDTO
 )

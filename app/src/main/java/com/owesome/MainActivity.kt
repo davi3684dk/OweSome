@@ -47,6 +47,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -56,6 +59,7 @@ import com.owesome.data.api.LoginRequest
 import com.owesome.data.api.LoginResponse
 import com.owesome.data.api.RegisterRequest
 import com.owesome.data.auth.AuthManager
+import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
 import com.owesome.di.appModule
 import com.owesome.ui.screens.CreateGroupScreen
@@ -63,6 +67,8 @@ import com.owesome.notifications.NotificationFacade
 import com.owesome.ui.screens.EditGroupScreen
 import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
+import com.owesome.ui.screens.LoginScreen
+import com.owesome.ui.screens.RegisterScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
 import kotlinx.coroutines.delay
@@ -125,58 +131,7 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
 
     val headerTitle by viewModel.title.collectAsState()
 
-    val service: AuthApiService = koinInject()
-
     LaunchedEffect(Unit) {
-        /*service.register(RegisterRequest(
-            username = "david",
-            email = "david@email.com",
-            password = "123456",
-            phone = "12345678"
-        )).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(
-                call: Call<ResponseBody?>,
-                response: Response<ResponseBody?>
-            ) {
-
-            }
-
-            override fun onFailure(
-                call: Call<ResponseBody?>,
-                t: Throwable
-            ) {
-
-            }
-        })*/
-
-
-        service.login(
-            LoginRequest(
-            "david",
-            "123456"
-            )
-        ).enqueue(object : Callback<LoginResponse> {
-            override fun onResponse(
-                call: Call<LoginResponse?>,
-                response: Response<LoginResponse?>
-            ) {
-                val body = response.body()
-                if (body != null) {
-                    authManager.saveAccessTokens(
-                        accessToken = "body.accessToken",
-                        refreshToken = body.refreshToken
-                    )
-                }
-            }
-
-            override fun onFailure(
-                call: Call<LoginResponse?>,
-                t: Throwable
-            ) {
-                println(t.message)
-            }
-        })
-
         authManager.loginRequired.collect {
             //TODO navController.navigate()
         }
@@ -188,6 +143,7 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
         darkTheme = true,
         dynamicColor = false
     ) {
+
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
@@ -195,10 +151,9 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                     title = {
                         Text(
                             headerTitle
-                        )
-                    },
+                        ) },
                     navigationIcon = {
-                        IconButton(onClick = {navController.popBackStack()}) {
+                        IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Localized description"
@@ -218,45 +173,38 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                         }
                     }
                     /*modifier = Modifier.dropShadow(
-                        shape = RoundedCornerShape(0.dp),
-                        shadow = Shadow(
-                            radius = 6.dp,
-                            spread = 6.dp,
-                            color = Color(0x40000000),
-                            offset = DpOffset(x = 0.dp, 4.dp)
-                        )
-                    )*/
-                )
-            },
+                       shape = RoundedCornerShape(0.dp),
+                       shadow = Shadow(
+                           radius = 6.dp,
+                           spread = 6.dp,
+                           color = Color(0x40000000),
+                           offset = DpOffset(x = 0.dp, 4.dp)
+                       )
+                   )*/) },
             bottomBar = {
                 NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
                     NavigationBarItem(
                         selected = selectedDestination == Screen.Groups.route,
                         onClick = {
                             navController.navigate(route = Screen.Groups.route)
-                            selectedDestination = Screen.Groups.route
-                        },
+                            selectedDestination = Screen.Groups.route },
                         icon = {
                             Icon(
                                 Icons.Default.Groups,
                                 contentDescription = Screen.Groups.route
-                            )
-                        },
+                            ) },
                         label = { Screen.Groups.label?.let { Text(it) } }
                     )
-
                     NavigationBarItem(
                         selected = selectedDestination == Screen.Profile.route,
                         onClick = {
                             navController.navigate(route = Screen.Profile.route)
-                            selectedDestination = Screen.Profile.route
-                        },
+                            selectedDestination = Screen.Profile.route },
                         icon = {
                             Icon(
                                 Icons.Default.AccountCircle,
                                 contentDescription = Screen.Profile.route
-                            )
-                        },
+                            ) },
                         label = { Screen.Profile.label?.let { Text(it) } }
                     )
                 }
@@ -265,12 +213,25 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
             Surface(modifier = Modifier.padding(innerPadding)) {
                 NavHost(
                     navController = navController,
-                    startDestination = Screen.Groups.route
+                    startDestination = Screen.Login.route
                 ) {
+                    composable(Screen.Login.route) {
+                        LoginScreen(
+                            navController = navController,
+                            onLoginSuccess = { user ->
+                                navController.navigate(Screen.Groups.route) {
+                                    popUpTo(Screen.Login.route) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
+                    composable(Screen.Register.route) {
+                        RegisterScreen(navigation = navController)
+                    }
                     composable(Screen.Groups.route) {
                         GroupsScreen(navigation = navController)
                     }
-
                     composable(
                         Screen.GroupDetails.route
                     ) { backStackEntry ->
@@ -293,6 +254,7 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
     }
 }
 
+
 sealed class Screen(
     val route: String,
     val label: String?,
@@ -302,6 +264,8 @@ sealed class Screen(
     object Settings : Screen("settings", "Settings")
     object CreateGroup : Screen("createGroup", "Create Group")
     object EditGroup : Screen("editGroup", "Edit Group")
+    object Login : Screen("login", "Login")
+    object Register: Screen("register", "Register")
 
     object GroupDetails : Screen("groupDetails/{groupId}", null) {
         fun createRoute(groupId: String) = "groupDetails/$groupId"
