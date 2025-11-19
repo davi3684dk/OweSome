@@ -27,8 +27,6 @@ interface GroupRepository {
 
     suspend fun createGroup(name: String, description: String, users: List<User>, imageBase64: String): Group?
     suspend fun addUser(groupId: String, userId: Int)
-
-    suspend fun addExpense(expense: ExpenseCreate)
     suspend fun updateGroup(groupId: String, name: String, description: String, addedUsers: List<Int>, removedUsers: List<Int>, imageBase64: String): Group?
 }
 
@@ -121,10 +119,6 @@ class GroupRepositoryImpl(
     }
 
     override suspend fun addUser(groupId: String, userId: Int) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun addExpense(expense: ExpenseCreate) {
         TODO("Not yet implemented")
     }
 }

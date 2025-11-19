@@ -74,6 +74,10 @@ class RetroFitClient(authManager: AuthManager, context: Context) {
     val userApi: UserApiService by lazy {
         retrofit.create(UserApiService::class.java)
     }
+
+    val expenseAPI: ExpenseApiService by lazy {
+        retrofit.create(ExpenseApiService::class.java)
+    }
 }
 
 class RefreshTokenInterceptor(private val authManager: AuthManager): Interceptor {
