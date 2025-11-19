@@ -222,6 +222,7 @@ sealed class Screen(
     object Groups : Screen("groups", "Groups")
     object Profile : Screen("profile", "Profile")
     object Settings : Screen("settings", "Settings")
+    object Notifications : Screen("notifications", "Notifications")
     object CreateGroup : Screen("createGroup", "Create Group")
     object EditGroup : Screen("editGroup", "Edit Group")
 
