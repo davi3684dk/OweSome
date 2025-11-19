@@ -14,7 +14,7 @@ data class CreateExpenseDTO(
 )
 
 data class CreateExpenseShareDTO(
-    @SerializedName("user")
+    @SerializedName("user_id")
     val user: Int,
     @SerializedName("amount_owed")
     val amount: Float

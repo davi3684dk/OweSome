@@ -38,11 +38,12 @@ import com.owesome.ui.viewmodels.ExpenseViewModel
 import com.owesome.ui.viewmodels.GroupViewModel
 import com.owesome.ui.viewmodels.NavViewModel
 import org.koin.compose.viewmodel.koinActivityViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun NewExpenseScreen(
     groupViewModel: GroupViewModel = koinActivityViewModel(),
-    expenseViewModel: ExpenseViewModel = koinActivityViewModel(),
+    expenseViewModel: ExpenseViewModel = koinViewModel(),
     navViewModel: NavViewModel = koinActivityViewModel(),
     navigation: NavController
 ) {
@@ -85,7 +86,7 @@ fun NewExpenseScreen(
 
         ) {
             item {
-                for (user in group.users) {
+                for (user in groupViewModel.getGroupMembers()) {
                     var checked by rememberSaveable {mutableStateOf(false)}
                     fun check() {
                         checked = !checked
@@ -123,16 +124,4 @@ fun NewExpenseScreen(
             modifier = Modifier.padding(20.dp)
         )
     }
-}
-
-@Composable
-fun EvenExpenseDisplay (
-    group: Group
-) {
-}
-
-@Composable
-fun AmountExpenseDisplay (
-    group: Group
-) {
 }

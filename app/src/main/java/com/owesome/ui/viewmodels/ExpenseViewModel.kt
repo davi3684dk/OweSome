@@ -35,6 +35,8 @@ class ExpenseUiState {
     var groupId by mutableIntStateOf(-1)
 
     val selectedUsers = mutableStateListOf<Int>()
+
+    val currentUser by mutableIntStateOf(-1)
 }
 
 class ExpenseViewModel (
