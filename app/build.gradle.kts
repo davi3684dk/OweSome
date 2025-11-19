@@ -22,7 +22,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            buildConfigField("String", "BACKEND_URL", "\"http://172.20.110.179:3001\"")
+            buildConfigField("String", "BACKEND_URL", "\"http://192.168.0.108:3001\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -30,7 +30,7 @@ android {
         }
 
         debug {
-            buildConfigField("String", "BACKEND_URL", "\"http://172.20.110.179:3001\"")
+            buildConfigField("String", "BACKEND_URL", "\"http://192.168.0.108:3001\"")
         }
     }
     compileOptions {
@@ -69,4 +69,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.koin.androidx.compose)
     implementation(libs.coil.compose)
+    implementation(libs.logging.interceptor)
 }

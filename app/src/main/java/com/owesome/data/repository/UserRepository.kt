@@ -4,24 +4,25 @@ import com.owesome.data.api.AuthApiService
 import com.owesome.data.api.LoginRequest
 import com.owesome.data.api.RegisterRequest
 import com.owesome.data.auth.AuthManager
+import com.owesome.data.api.UserApiService
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
 import kotlinx.coroutines.delay
-import kotlin.random.Random
-import kotlin.random.nextInt
+import retrofit2.HttpException
 
 interface UserRepository {
 
     suspend fun loginUser(username: String, password: String): User?
 
     suspend fun registerUser(user: UserCreate): Boolean
-    suspend fun getUserByName(username: String): User?
+    suspend fun getUserIdByName(username: String): User?
     suspend fun logoutUser(): Boolean
 }
 
 class UserRepositoryImpl(
     val authApiService: AuthApiService,
-    val authManager: AuthManager
+    val authManager: AuthManager,
+    val userApiService: UserApiService
 ) : UserRepository {
 
 
@@ -64,15 +65,25 @@ class UserRepositoryImpl(
         else return false
     }
 
-    override suspend fun getUserByName(username: String): User? {
+    override suspend fun getUserIdByName(username: String): User? {
         delay(500)
 
-        return User(
-            id = Random.nextInt(100000),
-            username = username,
-            email = "${username}@gmail.com",
-            phone = "12345678"
-        )
+        try {
+            val response = userApiService.findUserByName(username)
+
+            return if (response != null) {
+                User(
+                    id = response.id,
+                    username = response.username,
+                    email = response.email,
+                    phone = response.phone
+                )
+            } else {
+                null
+            }
+        } catch (e: HttpException) {
+            return null
+        }
     }
 
     override suspend fun logoutUser(): Boolean {
