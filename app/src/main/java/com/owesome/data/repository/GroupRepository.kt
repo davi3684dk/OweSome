@@ -1,141 +1,126 @@
 package com.owesome.data.repository
 
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.util.Base64
 import androidx.compose.ui.graphics.asImageBitmap
+import coil.network.HttpException
+import com.owesome.data.api.GroupApiService
+import com.owesome.data.api.dto.AddMemberDTO
+import com.owesome.data.api.dto.CreateGroupDTO
+import com.owesome.data.api.dto.UpdateGroupDTO
+import com.owesome.data.api.mappers.toCompactGroup
+import com.owesome.data.api.mappers.toGroup
 import com.owesome.data.entities.Expense
 import com.owesome.data.entities.ExpenseCreate
 import com.owesome.data.entities.ExpenseShare
 import com.owesome.data.entities.Group
 import com.owesome.data.entities.GroupCompact
 import com.owesome.data.entities.User
+import com.owesome.util.ImageUtil
 import kotlinx.coroutines.delay
+import java.lang.Exception
+import kotlin.math.exp
 
 interface GroupRepository {
     suspend fun getAllGroups(): List<GroupCompact>
     suspend fun getGroup(groupId: String): Group?
 
-    suspend fun createGroup(name: String, description: String, users: List<User>): Group?
-    suspend fun addUser(groupId: Int, userId: Int)
+    suspend fun createGroup(name: String, description: String, users: List<User>, imageBase64: String): Group?
+    suspend fun addUser(groupId: String, userId: Int)
 
     suspend fun addExpense(expense: ExpenseCreate)
-    suspend fun updateGroup(groupId: Int, name: String, description: String, users: List<User>, imageBase64: String): Group?
+    suspend fun updateGroup(groupId: String, name: String, description: String, addedUsers: List<Int>, removedUsers: List<Int>, imageBase64: String): Group?
 }
 
-class GroupRepositoryImpl : GroupRepository {
-    override suspend fun getGroup(groupId: String): Group {
-        delay(200)
-
-        val u1 = User(
-            0,
-            "Bob",
-            "bob@email.com",
-            "12345678"
-        )
-
-        val u2 = User(
-            1,
-            "Alice",
-            "alice@email.com",
-            "12345678"
-        )
-
-        val es1 = ExpenseShare(
-            0,
-            0,
-            u1,
-            500
-        )
-
-        val es2 = ExpenseShare(
-            1,
-            1,
-            u2,
-            500
-        )
-
-        val e1 = Expense(
-            0,
-            1000f,
-            "Drinks",
-            0,
-            u2,
-            listOf(es1),
-            -500f
-        )
-
-        val e2 = Expense(
-            1,
-            1200f,
-            "Hotel",
-            0,
-            u1,
-            listOf(es2),
-            500f
-        )
-
-        val g1 = Group(
-            0,
-            "Vacation to Prague",
-            "",
-            listOf(u1, u2),
-            listOf(e1, e2),
-            0f,
+class GroupRepositoryImpl(
+    val groupApiService: GroupApiService
+) : GroupRepository {
+    override suspend fun getGroup(groupId: String): Group? {
+        val response = groupApiService.getGroup(groupId)
+        return if (response.isSuccessful)
+            response.body()?.toGroup()
+        else
             null
-        )
-
-        return g1
     }
 
     override suspend fun getAllGroups(): List<GroupCompact> {
-        delay(200)
-
-        return mutableListOf(
-            GroupCompact(0, "Vacation to Prague", "", -400, null),
-            GroupCompact(1, "Household", "", 2500, null),
-        )
+        val response = groupApiService.getGroups()
+        return if (response.isSuccessful)
+            response.body()?.groups?.map {
+                it.toCompactGroup()
+            } ?: listOf()
+        else
+            return listOf()
     }
 
-    override suspend fun createGroup(name: String, description: String, users: List<User>): Group? {
-        return Group(
-            id = 0,
-            name = name,
-            description = description,
-            users = users,
-            expenses = listOf(),
-            status = 0f,
-            null
+    override suspend fun createGroup(name: String, description: String, users: List<User>, imageBase64: String): Group? {
+
+        val response = groupApiService.createGroup(
+            CreateGroupDTO(
+                description = description,
+                name = name,
+                profileImage = imageBase64
+            )
         )
+
+        if (response.isSuccessful && response.body()?.group != null) {
+            val group = response.body()!!.group
+
+            //Add users
+            for (user in users) {
+                try {
+                    groupApiService.addMember(group.id, AddMemberDTO(user.id))
+                } catch (e: Exception) {
+                    println(e.localizedMessage)
+                }
+            }
+
+            return Group(
+                id = group.id,
+                name = group.name,
+                description = group.description,
+                users = users,
+                expenses = listOf(),
+                status = 0f,
+                image = ImageUtil.decodeBase64ToImageBitmap(group.image)
+            )
+        }
+
+        return null
     }
 
     override suspend fun updateGroup(
-        groupId: Int,
+        groupId: String,
         name: String,
         description: String,
-        users: List<User>,
+        addedUsers: List<Int>,
+        removedUsers: List<Int>,
         imageBase64: String
     ): Group? {
-        // Source - https://stackoverflow.com/a
-        // Posted by jagadishlakkurcom jagadishlakk
-        // Retrieved 2025-11-15, License - CC BY-SA 4.0
 
-        val imageBytes = Base64.decode(imageBase64, Base64.DEFAULT)
-        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-
-
-        return Group(
-            id = groupId,
+        val response = groupApiService.updateGroup(groupId, UpdateGroupDTO(
             name = name,
-            description = description,
-            users = users,
-            expenses = listOf(),
-            status = 0f,
-            image = bitmap.asImageBitmap()
-        )
+            image = imageBase64,
+            description = description
+        ))
+
+        for (user in addedUsers) {
+            groupApiService.addMember(groupId, AddMemberDTO(user))
+        }
+
+        for (user in removedUsers) {
+            groupApiService.removeMember(groupId, AddMemberDTO(user))
+        }
+
+        return if (response.isSuccessful && response.body()?.group != null) {
+            response.body()!!.group.toGroup()
+        } else {
+            null
+        }
+
     }
 
-    override suspend fun addUser(groupId: Int, userId: Int) {
+    override suspend fun addUser(groupId: String, userId: Int) {
         TODO("Not yet implemented")
     }
 

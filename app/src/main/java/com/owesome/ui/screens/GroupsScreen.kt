@@ -63,7 +63,10 @@ fun GroupsScreen(
 
     LaunchedEffect(Unit) {
         println(navViewModel.title.value)
-        viewModel.getAllGroups()
+
+        if (viewModel.groups.isEmpty())
+            viewModel.getAllGroups()
+
         navViewModel.setTitle("Groups")
     }
 
@@ -80,7 +83,7 @@ fun GroupsScreen(
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 items(viewModel.groups) { group ->
                     Card(

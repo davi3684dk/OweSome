@@ -54,6 +54,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.owesome.data.api.AuthApiService
+import com.owesome.data.api.LoginRequest
+import com.owesome.data.api.LoginResponse
+import com.owesome.data.api.RegisterRequest
 import com.owesome.data.auth.AuthManager
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
@@ -68,11 +72,16 @@ import com.owesome.ui.screens.NewExpenseScreen
 import com.owesome.ui.screens.RegisterScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
+import kotlinx.coroutines.delay
+import okhttp3.ResponseBody
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 import org.koin.core.context.startKoin
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 
 class MainActivity : ComponentActivity() {
@@ -108,8 +117,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
-
         enableEdgeToEdge()
         setContent {
             OweSome()
@@ -121,9 +128,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: AuthManager = koinInject()) {
     val navController = rememberNavController()
-
-    var loggedInUser by remember { mutableStateOf<UserCreate?>(null) }
-
     var selectedDestination by rememberSaveable { mutableStateOf(Screen.Groups.route) }
 
     val headerTitle by viewModel.title.collectAsState()
@@ -270,6 +274,6 @@ sealed class Screen(
     object NewExpense: Screen("newExpense", "New Expense")
 
     object GroupDetails : Screen("groupDetails/{groupId}", null) {
-        fun createRoute(groupId: Int) = "groupDetails/$groupId"
+        fun createRoute(groupId: String) = "groupDetails/$groupId"
     }
 }

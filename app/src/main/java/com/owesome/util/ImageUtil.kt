@@ -10,10 +10,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import java.io.ByteArrayOutputStream
-
-
-
-
+import androidx.core.graphics.scale
 
 
 class ImageUtil {
@@ -31,16 +28,33 @@ class ImageUtil {
             }
         }
 
-        fun imageBitmapToBase64(imageBitmap: ImageBitmap): String? {
-            // Source - https://stackoverflow.com/a
-            // Posted by jeet, modified by community. See post 'Timeline' for change history
-            // Retrieved 2025-11-15, License - CC BY-SA 3.0
+        fun imageBitmapToBase64(imageBitmap: ImageBitmap, maxSize: Int = 512): String? {
             try {
-                val byteArrayOutputStream = ByteArrayOutputStream()
-                imageBitmap.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
-                val byteArray = byteArrayOutputStream.toByteArray()
+                val bitmap = imageBitmap.asAndroidBitmap()
 
-                return Base64.encodeToString(byteArray, Base64.DEFAULT)
+                val width = bitmap.width
+                val height = bitmap.height
+                val largestSide = maxOf(width, height)
+
+                val scale = if (largestSide > maxSize) {
+                    maxSize.toFloat() / largestSide.toFloat()
+                } else {
+                    1f
+                }
+
+                val scaledBitmap =
+                    if (scale < 1f) {
+                        bitmap.scale((width * scale).toInt(), (height * scale).toInt())
+                    } else bitmap
+
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                scaledBitmap.compress(
+                    Bitmap.CompressFormat.JPEG,
+                    80,
+                    byteArrayOutputStream
+                )
+
+                return Base64.encodeToString(byteArrayOutputStream.toByteArray(), Base64.DEFAULT)
             } catch (e: Exception) {
                 return null
             }
