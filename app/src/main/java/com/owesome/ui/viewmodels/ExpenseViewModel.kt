@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.owesome.data.auth.AuthManager
+import com.owesome.data.entities.Expense
 import com.owesome.data.entities.ExpenseCreate
 import com.owesome.data.entities.ExpenseShare
 import com.owesome.data.entities.ExpenseShareCreate
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlin.collections.getValue
 import kotlin.collections.setValue
+import kotlin.math.exp
 
 class ExpenseUiState {
     var expenseTitle by mutableStateOf("")
@@ -27,16 +29,16 @@ class ExpenseUiState {
     var totalAmount by mutableStateOf("")
     var totalAmountError by mutableStateOf<String?>(null)
 
-    var userAmount by mutableStateOf("")
-    var userAmountError by mutableStateOf<String?>(null)
-
     var userMap = mutableStateMapOf<Int,Float>()
+    var userMapError = mutableStateMapOf<Int,String?>()
 
     var groupId by mutableIntStateOf(-1)
 
     val selectedUsers = mutableStateListOf<Int>()
 
     val currentUser by mutableIntStateOf(-1)
+
+    var customAmount by mutableStateOf(false)
 }
 
 class ExpenseViewModel (
@@ -57,14 +59,14 @@ class ExpenseViewModel (
                 uiState.totalAmountError = "Total Amount is not a valid number"
                 return@launch
             }
-            val split = amount / uiState.selectedUsers.size
-            val expenseShares = mutableListOf<ExpenseShareCreate>()
-            for (user in uiState.selectedUsers) {
-                val expenseShareCreate = ExpenseShareCreate(
-                    owedBy = user,
-                    amount = split
-                )
-                expenseShares.add(expenseShareCreate)
+            var expenseShares = mutableListOf<ExpenseShareCreate>()
+            if (!uiState.customAmount) {
+                expenseShares = expenseSharesEven(expenseShares, amount)
+            } else {
+                if (validateUserAmounts(amount) == null) {
+                    return@launch
+                }
+                expenseShares = expenseCreateCustom(expenseShares, amount)
             }
             val expenseCreate = ExpenseCreate(
                 amount = amount,
@@ -80,22 +82,91 @@ class ExpenseViewModel (
         }
     }
 
-    fun validateTitle(Title: String) {
-
+    /*TODO Refactor the two below functions if there is time...
+       For loop could likely be moved back up into main function */
+    fun expenseSharesEven(
+        expenseShares: MutableList<ExpenseShareCreate>,
+        amount: Float
+    ): MutableList<ExpenseShareCreate> {
+        val split = amount / uiState.selectedUsers.size
+        for (user in uiState.selectedUsers) {
+            val expenseShareCreate = ExpenseShareCreate(
+                owedBy = user,
+                amount = split
+            )
+            expenseShares.add(expenseShareCreate)
+        }
+        return expenseShares
     }
 
-    fun validateTotalAmount(TotalAmount: String): Float? {
-        return try {
-            TotalAmount.toFloat()
-        } catch (
-            e: Exception
-        ) {
+    fun expenseCreateCustom(
+        expenseShares: MutableList<ExpenseShareCreate>,
+        amount: Float
+    ): MutableList<ExpenseShareCreate>  {
+
+        var nonCustomSplit = uiState.selectedUsers.size
+        var totalCustomAmount = 0.0f
+        for(entry in uiState.userMap) {
+            totalCustomAmount = totalCustomAmount + entry.value
+            nonCustomSplit--
+        }
+        val nonCustomAmount = (amount - totalCustomAmount)/nonCustomSplit
+
+        for(user in uiState.selectedUsers) {
+            var userAmount = 0.0f
+            if (uiState.userMap.containsKey(user)) {
+                userAmount = uiState.userMap.getValue(user)
+            } else {
+                userAmount = nonCustomAmount
+            }
+            val expenseShareCreate = ExpenseShareCreate(
+                owedBy = user,
+                amount = userAmount
+            )
+            expenseShares.add(expenseShareCreate)
+        }
+
+        return expenseShares
+    }
+
+    fun validateTitle(title: String): String? {
+        return title.ifEmpty {
             null
         }
     }
 
-    fun validateUserAmount(UserAmount: String) {
+    fun validateTotalAmount(totalAmount: String): Float? {
+        return try {
+            totalAmount.toFloat()
+        } catch ( e: Exception ) {
+            null
+        }
+    }
 
+    fun mapUserAmount(user: Int, amount: String) {
+        try {
+            uiState.userMap.put(user,amount.toFloat())
+        } catch ( e: Exception ) {
+            uiState.userMapError.put(user,null)
+        }
+    }
+
+    fun validateUserAmounts(totalAmount: Float): Boolean? {
+        if (!uiState.userMapError.isEmpty()) {
+            return null
+        }
+        var tally = 0.0f
+        for (entry in uiState.userMap) {
+            tally = tally + entry.value
+            if (entry.value > totalAmount) {
+                return null
+            } else if (tally > totalAmount) {
+                return null
+            } else if (entry.value == 0.0f) {
+                return null
+            }
+        }
+        return true
     }
 }
 

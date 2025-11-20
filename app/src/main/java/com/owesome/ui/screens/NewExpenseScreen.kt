@@ -22,9 +22,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -50,7 +52,6 @@ fun NewExpenseScreen(
     val state = expenseViewModel.uiState
     
     val group by groupViewModel.currentGroup.collectAsState()
-    var splitType by rememberSaveable { mutableStateOf("Even") }
 
     LaunchedEffect(group) {
         navViewModel.setTitle(group.name)
@@ -72,22 +73,26 @@ fun NewExpenseScreen(
             onValueChange = { state.expenseTitle = it },
             label = { Text("Title") },
             maxLines = 10,
-            modifier = Modifier.fillMaxWidth().padding(20.dp),
         )
         OutlinedTextField(
             value = state.totalAmount,
             onValueChange = { state.totalAmount = it },
-            label = { Text("Total Amount") },
+            label = { Text("Total Amount:") },
             singleLine = true,
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth().padding(20.dp),
         )
+        Button(
+           onClick = { state.customAmount = !state.customAmount }
+        ) {
+            Text(if (state.customAmount) "Disable custom amount" else "Enable custom amount")
+        }
         LazyColumn (
 
         ) {
             item {
-                for (user in groupViewModel.getGroupMembers()) {
+                for (user in group.users) {
                     var checked by rememberSaveable {mutableStateOf(false)}
+                    var userAmount by rememberSaveable { mutableStateOf("") }
                     fun check() {
                         checked = !checked
                         if (checked) {
@@ -100,9 +105,7 @@ fun NewExpenseScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Button(
-                            onClick = {
-                                check()
-                            },
+                            onClick = { check(); },
                         ) {
                             Icon(Icons.Filled.AccountCircle, "profile picture")
                             Text(user.username)
@@ -110,6 +113,18 @@ fun NewExpenseScreen(
                         Checkbox(
                             checked = checked,
                             onCheckedChange = { check() }
+                        )
+                        OutlinedTextField(
+                            value = if(checked) userAmount else "",
+                            onValueChange = {
+                                userAmount = it;
+                                expenseViewModel.mapUserAmount(user.id, userAmount);
+                                checked = !userAmount.isEmpty()
+                                            },
+                            label = { Text("Custom Amount:") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                            enabled = state.customAmount
                         )
                     }
                 }
