@@ -45,6 +45,17 @@ class LoginViewModel(
     private val _onComplete = Channel<User>()
     val onComplete = _onComplete.receiveAsFlow()
 
+    init {
+        viewModelScope.launch {
+            val user = userRepo.getUser()
+
+            if (user != null) {
+                authManager.loggedInUser = user
+                _onComplete.send(user)
+            }
+        }
+    }
+
     fun loginUser() {
         if (uiState.username.isNotBlank() && uiState.password.isNotBlank()) {
             viewModelScope.launch {
