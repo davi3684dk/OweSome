@@ -8,6 +8,7 @@ import com.owesome.data.api.UserApiService
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
 import kotlinx.coroutines.delay
+import org.json.JSONObject
 import retrofit2.HttpException
 
 interface UserRepository {
@@ -57,7 +58,6 @@ class UserRepositoryImpl(
             password = user.password,
             phone = user.phone
         ))
-
         //Response validation, did we actually register?
         if (response.isSuccessful) {
             return true
