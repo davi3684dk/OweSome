@@ -4,11 +4,14 @@ import com.owesome.data.api.dto.CompactGroupDTO
 import com.owesome.data.api.dto.ExpenseDTO
 import com.owesome.data.api.dto.ExpenseShareDTO
 import com.owesome.data.api.dto.GroupDTO
+import com.owesome.data.api.dto.NotificationDTO
 import com.owesome.data.api.dto.UserDTO
 import com.owesome.data.entities.Expense
 import com.owesome.data.entities.ExpenseShare
 import com.owesome.data.entities.Group
 import com.owesome.data.entities.GroupCompact
+import com.owesome.data.entities.Notification
+import com.owesome.data.entities.NotificationType
 import com.owesome.data.entities.User
 import com.owesome.util.ImageUtil
 
@@ -67,5 +70,12 @@ fun UserDTO.toUser(): User {
         username = this.username,
         email = this.email,
         phone = this.phone
+    )
+}
+
+fun NotificationDTO.toNotification(): Notification {
+    return Notification(
+        message = this.message,
+        messageType = NotificationType.Info
     )
 }

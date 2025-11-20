@@ -1,6 +1,7 @@
 package com.owesome
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -61,6 +62,7 @@ import com.owesome.data.api.RegisterRequest
 import com.owesome.data.auth.AuthManager
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
+import com.owesome.data.repository.NotificationRepository
 import com.owesome.di.appModule
 import com.owesome.ui.screens.CreateGroupScreen
 import com.owesome.notifications.NotificationFacade
@@ -116,8 +118,16 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+
+
         enableEdgeToEdge()
         setContent {
+            val notificationFacade = koinInject<NotificationFacade>()
+
+            LaunchedEffect(Unit) {
+                notificationFacade.listen()
+            }
+
             OweSome()
         }
     }
@@ -125,7 +135,10 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: AuthManager = koinInject()) {
+fun OweSome(
+    viewModel: NavViewModel = koinActivityViewModel(),
+    authManager: AuthManager = koinInject(),
+) {
     val navController = rememberNavController()
     var selectedDestination by rememberSaveable { mutableStateOf(Screen.Groups.route) }
 

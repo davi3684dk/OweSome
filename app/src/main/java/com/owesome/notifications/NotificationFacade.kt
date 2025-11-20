@@ -6,8 +6,16 @@ import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.owesome.R
+import com.owesome.data.repository.NotificationRepository
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.time.delay
+import kotlin.time.Duration.Companion.seconds
+
 const val CHANNEL_ID = "owesome_notification_channel"
-class NotificationFacade(private val context: Context) {
+class NotificationFacade(
+    private val context: Context,
+    private val notificationRepository: NotificationRepository
+) {
 init {
     createNotificationChannel(context)
 }
@@ -38,7 +46,7 @@ init {
             .setSmallIcon(R.drawable.notification_icon)
             .setContentTitle(title)
             .setContentText(text)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
 
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -49,5 +57,16 @@ init {
     }
 
 
+    suspend fun listen() {
+        while (true) {
+            val notifications = notificationRepository.getNewNotification()
+            if (notifications != null) {
+                for (notification in notifications) {
+                    sendNotification(notification.message, "OweSome")
+                }
+            }
 
+            delay(10.seconds )
+        }
+    }
 }

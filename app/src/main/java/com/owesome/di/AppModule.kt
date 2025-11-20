@@ -4,6 +4,8 @@ import com.owesome.data.api.RetroFitClient
 import com.owesome.data.auth.AuthManager
 import com.owesome.data.repository.GroupRepository
 import com.owesome.data.repository.GroupRepositoryImpl
+import com.owesome.data.repository.NotificationRepository
+import com.owesome.data.repository.NotificationRepositoryImpl
 import com.owesome.data.repository.UserRepository
 import com.owesome.data.repository.UserRepositoryImpl
 import com.owesome.ui.viewmodels.GroupEditorViewModel
@@ -30,9 +32,11 @@ val appModule = module {
     viewModelOf(::GroupEditorViewModel)
     singleOf(::GroupRepositoryImpl) bind GroupRepository::class
     singleOf(::UserRepositoryImpl) bind UserRepository::class
+    singleOf(::NotificationRepositoryImpl) bind NotificationRepository::class
     single { get<RetroFitClient>().groupApi }
     single { get<RetroFitClient>().authApi }
     single { get<RetroFitClient>().userApi }
+    single { get<RetroFitClient>().notificationApi }
     viewModel { NavViewModel() }
-    single { NotificationFacade(androidContext()) }
+    singleOf(::NotificationFacade)
 }
