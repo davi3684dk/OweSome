@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class GroupEditorUiState {
-    var groupId by mutableIntStateOf(-1)
+    var groupId by mutableStateOf("")
     var groupName by mutableStateOf("")
     var groupImage by mutableStateOf<ImageBitmap?>(null)
     var imageError by mutableStateOf(false)
@@ -40,6 +40,9 @@ class GroupEditorViewModel(
     //Use channel for producer->consumer, and Flows for broadcasting
     private val _onComplete = Channel<Group>()
     val onComplete = _onComplete.receiveAsFlow()
+
+    var removedUsers = mutableStateListOf<Int>()
+    var addedUsers = mutableStateListOf<Int>()
 
     fun setGroup(group: Group) {
         uiState.groupName = group.name
@@ -76,8 +79,11 @@ class GroupEditorViewModel(
     }
 
     fun addUser(user: User) {
-        if (!uiState.users.contains(user))
+        if (!uiState.users.contains(user)) {
             uiState. users.add(user)
+            addedUsers.add(user.id)
+            removedUsers.remove(user.id)
+        }
     }
 
     fun createGroup() {
@@ -88,7 +94,8 @@ class GroupEditorViewModel(
             val newGroup = groupRepository.createGroup(
                 name = uiState.groupName,
                 description = "",
-                users = uiState.users
+                users = uiState.users,
+                imageBase64 = if (uiState.groupImage != null) ImageUtil.imageBitmapToBase64(uiState.groupImage!!) ?: "" else ""
             )
             if (newGroup != null) {
                 _onComplete.send(newGroup)
@@ -107,11 +114,12 @@ class GroupEditorViewModel(
             }
 
             val updatedGroup = groupRepository.updateGroup(
-                uiState.groupId,
-                uiState.groupName,
-                "",
-                uiState.users,
-                groupImage
+                groupId = uiState.groupId,
+                name = uiState.groupName,
+                description = "",
+                addedUsers = addedUsers,
+                removedUsers = removedUsers,
+                imageBase64 = groupImage
             )
             if (updatedGroup != null) {
                 _onComplete.send(updatedGroup)
@@ -121,5 +129,7 @@ class GroupEditorViewModel(
 
     fun removeUser(user: User) {
         uiState.users.remove(user)
+        removedUsers.add(user.id)
+        addedUsers.remove(user.id)
     }
 }

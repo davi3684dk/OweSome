@@ -2,7 +2,6 @@ package com.owesome.ui.viewmodels
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -44,7 +43,7 @@ class AddUserViewModel(
 
         viewModelScope.launch {
             loading = true
-            val user = userRepository.getUserByName(username)
+            val user = userRepository.getUserIdByName(username)
             if (user != null) {
                 usernameSuccess = true
                 foundUser = user
@@ -56,6 +55,6 @@ class AddUserViewModel(
     }
 
     suspend fun findUser(username: String): User? {
-        return userRepository.getUserByName(username)
+        return userRepository.getUserIdByName(username)
     }
 }

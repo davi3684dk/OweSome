@@ -4,7 +4,7 @@ data class Expense(
     val id: Int,
     val amount: Float,
     val description: String,
-    val groupId: Int,
+    val groupId: String,
     val paidBy: User,
     val split: List<ExpenseShare>,
     val status: Float
