@@ -2,9 +2,13 @@ package com.owesome.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -86,6 +90,7 @@ fun ProfileScreen(navigation: NavHostController) {
 fun AccountManagementContent(navigation: NavHostController) {
     var username by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
+    var phonePrefix by rememberSaveable { mutableStateOf("") }
     var phoneNumber by rememberSaveable { mutableStateOf("") }
     var oldPassword by rememberSaveable { mutableStateOf("") }
     var newPassword by rememberSaveable { mutableStateOf("") }
@@ -115,13 +120,24 @@ fun AccountManagementContent(navigation: NavHostController) {
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
 
-        // TODO add region field for phone number in a row
-        OutlinedTextField(
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it },
-            label = { Text("Input Phone Number") },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-        )
+        Row (
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            OutlinedTextField(
+                value = phonePrefix,
+                onValueChange = { phonePrefix = it },
+                label = { Text("Prefix") },
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
+            OutlinedTextField(
+                value = phoneNumber,
+                onValueChange = { phoneNumber = it },
+                label = { Text("Phone Number") },
+                modifier = Modifier.weight(3f).fillMaxHeight()
+            )
+        }
 
         ExtendedFloatingActionButton(
             onClick = {
