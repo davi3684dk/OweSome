@@ -1,6 +1,7 @@
 package com.owesome
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -124,6 +125,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("RestrictedApi")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: AuthManager = koinInject()) {
@@ -131,6 +133,8 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
     var selectedDestination by rememberSaveable { mutableStateOf(Screen.Groups.route) }
 
     val headerTitle by viewModel.title.collectAsState()
+
+    val currentStack = navController.currentBackStack.collectAsState()
 
     LaunchedEffect(Unit) {
         authManager.loginRequired.collect {
@@ -154,11 +158,13 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                             headerTitle
                         ) },
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Localized description"
-                            )
+                        if (currentStack.value.size > 2) {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Localized description"
+                                )
+                            }
                         }
                     },
                     actions = {
@@ -187,7 +193,11 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                     NavigationBarItem(
                         selected = selectedDestination == Screen.Groups.route,
                         onClick = {
-                            navController.navigate(route = Screen.Groups.route)
+                            navController.navigate(route = Screen.Groups.route) {
+                                popUpTo(Screen.Groups.route) {
+                                    inclusive = true
+                                }
+                            }
                             selectedDestination = Screen.Groups.route },
                         icon = {
                             Icon(

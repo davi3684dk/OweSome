@@ -5,9 +5,11 @@ import com.owesome.data.api.LoginRequest
 import com.owesome.data.api.RegisterRequest
 import com.owesome.data.auth.AuthManager
 import com.owesome.data.api.UserApiService
+import com.owesome.data.api.mappers.toUser
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
 import kotlinx.coroutines.delay
+import org.json.JSONObject
 import retrofit2.HttpException
 
 interface UserRepository {
@@ -17,6 +19,7 @@ interface UserRepository {
     suspend fun registerUser(user: UserCreate): Boolean
     suspend fun getUserIdByName(username: String): User?
     suspend fun logoutUser(): Boolean
+    suspend fun getUser(): User?
 }
 
 class UserRepositoryImpl(
@@ -57,7 +60,6 @@ class UserRepositoryImpl(
             password = user.password,
             phone = user.phone
         ))
-
         //Response validation, did we actually register?
         if (response.isSuccessful) {
             return true
@@ -96,5 +98,17 @@ class UserRepositoryImpl(
         }
         else return false
 
+    }
+
+    override suspend fun getUser(): User? {
+        val response = authApiService.user()
+
+        val body = response.body()
+
+        if (response.isSuccessful && body != null) {
+            return body.toUser()
+        } else {
+            return null
+        }
     }
 }
