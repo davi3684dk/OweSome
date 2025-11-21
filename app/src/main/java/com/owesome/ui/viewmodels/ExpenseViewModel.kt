@@ -103,29 +103,27 @@ class ExpenseViewModel (
         expenseShares: MutableList<ExpenseShareCreate>,
         amount: Float
     ): MutableList<ExpenseShareCreate>  {
-
-        var nonCustomSplit = uiState.selectedUsers.size
-        var totalCustomAmount = 0.0f
-        for(entry in uiState.userMap) {
-            totalCustomAmount = totalCustomAmount + entry.value
-            nonCustomSplit--
-        }
-        val nonCustomAmount = (amount - totalCustomAmount)/nonCustomSplit
-
-        for(user in uiState.selectedUsers) {
-            var userAmount = 0.0f
-            if (uiState.userMap.containsKey(user)) {
-                userAmount = uiState.userMap.getValue(user)
-            } else {
-                userAmount = nonCustomAmount
-            }
+        var toPay = amount
+        for (entry in uiState.userMap) {
+            toPay = toPay - entry.value
             val expenseShareCreate = ExpenseShareCreate(
-                owedBy = user,
-                amount = userAmount
+                owedBy = entry.key,
+                amount = entry.value
             )
             expenseShares.add(expenseShareCreate)
         }
-
+        if (toPay != 0f) {
+            toPay = toPay/(uiState.selectedUsers.size-uiState.userMap.size)
+            for (user in uiState.selectedUsers) {
+                if (!uiState.userMap.containsKey(user)) {
+                    val expenseShareCreate = ExpenseShareCreate(
+                        owedBy = user,
+                        amount = toPay
+                    )
+                    expenseShares.add(expenseShareCreate)
+                }
+            }
+        }
         return expenseShares
     }
 
@@ -180,4 +178,8 @@ TODO Current errors happen when something improper has been typed into a field,
  the validateUserAmounts() will never succeed. Additionally the app crashes if
  the custom amount is the same as the total while another is simply selected
  to share the expense without an amount specified.
+ When the amount for two is changed into something that works it will however
+ still proceed to work.
+ - Will work when custom input for one person is put in first, but not if another
+    user have had their custom deleted and selectin removed.
  */
