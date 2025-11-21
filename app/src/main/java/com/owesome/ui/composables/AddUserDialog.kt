@@ -12,6 +12,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,7 +22,12 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun AddUserDialog(viewModel: AddUserViewModel = koinViewModel(), onUserAdded: (User) -> Unit) {
-    val user = viewModel.foundUser
+
+    LaunchedEffect(Unit) {
+        viewModel.onComplete.collect {
+            onUserAdded(it)
+        }
+    }
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -52,31 +58,19 @@ fun AddUserDialog(viewModel: AddUserViewModel = koinViewModel(), onUserAdded: (U
                 )
             }
 
-            if (user == null) {
-                Button(
-                    onClick = {
-                        viewModel.searchUser()
-                    },
-                    modifier = Modifier.padding(top = 20.dp),
-                    enabled = !viewModel.loading
-                ) {
-                    Icon(Icons.Default.Search, contentDescription = "Search User")
-                    Text("Search User")
-                }
-            } else {
-                Button(
-                    onClick = {
-                        onUserAdded(user)
-                    },
-                    modifier = Modifier.padding(top = 20.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Add Icon"
-                    )
-                    Text(text = "Add User")
-                }
+            Button(
+                onClick = {
+                    viewModel.searchUser()
+                },
+                modifier = Modifier.padding(top = 20.dp)
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Add Icon"
+                )
+                Text(text = "Add User")
             }
+
         }
     }
 }

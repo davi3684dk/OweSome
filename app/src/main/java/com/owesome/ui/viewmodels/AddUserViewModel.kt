@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.owesome.data.entities.User
 import com.owesome.data.repository.UserRepository
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class AddUserViewModel(
@@ -26,6 +28,9 @@ class AddUserViewModel(
 
     var loading by mutableStateOf(false)
         private set
+
+    private val _onComplete = Channel<User>()
+    val onComplete = _onComplete.receiveAsFlow()
 
 
     fun onUsernameChange(newName: String) {
@@ -47,6 +52,7 @@ class AddUserViewModel(
             if (user != null) {
                 usernameSuccess = true
                 foundUser = user
+                _onComplete.send(user)
             } else {
                 usernameError = true
             }
