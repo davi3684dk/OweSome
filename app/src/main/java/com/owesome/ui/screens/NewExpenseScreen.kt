@@ -1,12 +1,16 @@
 package com.owesome.ui.screens
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -22,9 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,7 +54,9 @@ fun NewExpenseScreen(
     navigation: NavController
 ) {
     val state = expenseViewModel.uiState
-    
+
+    val scrollState = rememberLazyListState(0)
+
     val group by groupViewModel.currentGroup.collectAsState()
 
     LaunchedEffect(group) {
@@ -64,16 +70,12 @@ fun NewExpenseScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize().padding(20.dp)
     ){
-        Text(
-            text = "New Expense",
-            style = MaterialTheme.typography.bodyLarge,
-        )
         OutlinedTextField(
             value = state.expenseTitle,
             onValueChange = { state.expenseTitle = it },
             label = { Text("Title") },
-            maxLines = 10,
-        )
+            singleLine = true,
+            )
         OutlinedTextField(
             value = state.totalAmount,
             onValueChange = { state.totalAmount = it },
@@ -84,49 +86,64 @@ fun NewExpenseScreen(
         Button(
            onClick = { state.customAmount = !state.customAmount }
         ) {
-            Text(if (state.customAmount) "Disable custom amount" else "Enable custom amount")
+            Text(if (state.customAmount) "Disable Custom Amount" else "Enable Custom Amount")
         }
         LazyColumn (
-
+            reverseLayout = false,
+            state = scrollState,
+            modifier = Modifier.heightIn(0.dp,300.dp).fillMaxSize()
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = MaterialTheme.shapes.extraSmall
+                ),
         ) {
-            item {
-                for (user in group.users) {
-                    var checked by rememberSaveable {mutableStateOf(false)}
-                    var userAmount by rememberSaveable { mutableStateOf("") }
-                    fun check() {
-                        checked = !checked
-                        if (checked) {
-                            state.selectedUsers.add(user.id)
-                        } else {
-                            state.selectedUsers.remove(user.id)
-                        }
+            items(group.users) { user ->
+                var checked by rememberSaveable {mutableStateOf(false)}
+                var userAmount by rememberSaveable { mutableStateOf("") }
+                fun check() {
+                    checked = !checked
+                    if (checked) {
+                        state.selectedUsers.add(user.id)
+                    } else {
+                        state.selectedUsers.remove(user.id)
                     }
+                }
+                Row (
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(5.dp).fillMaxWidth(),
+                ) {
                     Row (
-                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(5f).padding(end = 5.dp)
                     ) {
                         Button(
                             onClick = { check(); },
+                            modifier = Modifier.weight(5f)
                         ) {
                             Icon(Icons.Filled.AccountCircle, "profile picture")
                             Text(user.username)
                         }
                         Checkbox(
                             checked = checked,
-                            onCheckedChange = { check() }
-                        )
-                        OutlinedTextField(
-                            value = if(checked) userAmount else "",
-                            onValueChange = {
-                                userAmount = it;
-                                expenseViewModel.mapUserAmount(user.id, userAmount);
-                                checked = !userAmount.isEmpty()
-                                            },
-                            label = { Text("Custom Amount:") },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                            enabled = state.customAmount
+                            onCheckedChange = { check() },
+                            modifier = Modifier.weight(1f)
                         )
                     }
+                    OutlinedTextField(
+                        value = if(checked) userAmount else "",
+                        onValueChange = {
+                            userAmount = it;
+                            expenseViewModel.mapUserAmount(user.id, userAmount);
+                            checked = !userAmount.isEmpty()
+                                        },
+                        label = { Text("Custom Amount:") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                        enabled = state.customAmount,
+                        modifier = Modifier.weight(4f)
+                    )
                 }
             }
         }
@@ -136,7 +153,6 @@ fun NewExpenseScreen(
             },
             icon = { Icon(Icons.Filled.Check, "Floating action button.") },
             text = { Text(text = "Confirm")},
-            modifier = Modifier.padding(20.dp)
         )
     }
 }

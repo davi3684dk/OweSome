@@ -146,8 +146,13 @@ class ExpenseViewModel (
     fun mapUserAmount(user: Int, amount: String) {
         try {
             uiState.userMap.put(user,amount.toFloat())
+            if (uiState.userMapError.containsKey(user)) {
+                uiState.userMapError.remove(user)
+            }
         } catch ( e: Exception ) {
-            uiState.userMapError.put(user,null)
+            if (!amount.isEmpty()) {
+                uiState.userMapError.put(user,null)
+            }
         }
     }
 
@@ -170,4 +175,9 @@ class ExpenseViewModel (
     }
 }
 
-
+/*
+TODO Current errors happen when something improper has been typed into a field,
+ the validateUserAmounts() will never succeed. Additionally the app crashes if
+ the custom amount is the same as the total while another is simply selected
+ to share the expense without an amount specified.
+ */
