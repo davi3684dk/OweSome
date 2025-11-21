@@ -35,10 +35,10 @@ class ExpenseUiState {
     var groupId by mutableIntStateOf(-1)
 
     val selectedUsers = mutableStateListOf<Int>()
-
     val currentUser by mutableIntStateOf(-1)
 
     var customAmount by mutableStateOf(false)
+    val maxTitleLength: Int = 30
 }
 
 class ExpenseViewModel (
@@ -67,6 +67,11 @@ class ExpenseViewModel (
                     return@launch
                 }
                 expenseShares = expenseCreateCustom(expenseShares, amount)
+            }
+            val title = validateTitle(uiState.expenseTitle)
+            if (title == null) {
+                uiState.expenseTitleError = "Title Cannot be empty"
+                return@launch
             }
             val expenseCreate = ExpenseCreate(
                 amount = amount,
@@ -149,7 +154,10 @@ class ExpenseViewModel (
             }
         } catch ( e: Exception ) {
             if (!amount.isEmpty()) {
-                uiState.userMapError.put(user,null)
+                uiState.userMapError.put(user,"Invalid Amount")
+            } else {
+                uiState.userMapError.remove(user)
+                uiState.userMap.remove(user)
             }
         }
     }
@@ -172,14 +180,3 @@ class ExpenseViewModel (
         return true
     }
 }
-
-/*
-TODO Current errors happen when something improper has been typed into a field,
- the validateUserAmounts() will never succeed. Additionally the app crashes if
- the custom amount is the same as the total while another is simply selected
- to share the expense without an amount specified.
- When the amount for two is changed into something that works it will however
- still proceed to work.
- - Will work when custom input for one person is put in first, but not if another
-    user have had their custom deleted and selectin removed.
- */

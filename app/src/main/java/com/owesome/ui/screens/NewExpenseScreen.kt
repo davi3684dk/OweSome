@@ -36,6 +36,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -70,12 +71,14 @@ fun NewExpenseScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize().padding(20.dp)
     ){
-        OutlinedTextField(
-            value = state.expenseTitle,
-            onValueChange = { state.expenseTitle = it },
-            label = { Text("Title") },
-            singleLine = true,
+        Column {
+            OutlinedTextField(
+                value = state.expenseTitle,
+                onValueChange = { state.expenseTitle = it },
+                label = { Text("Title") },
+                singleLine = true,
             )
+        }
         OutlinedTextField(
             value = state.totalAmount,
             onValueChange = { state.totalAmount = it },
