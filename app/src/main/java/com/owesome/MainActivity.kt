@@ -69,6 +69,7 @@ import com.owesome.ui.screens.EditGroupScreen
 import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.screens.LoginScreen
+import com.owesome.ui.screens.NewExpenseScreen
 import com.owesome.ui.screens.RegisterScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
@@ -258,6 +259,10 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                     composable(Screen.EditGroup.route) {
                         EditGroupScreen(navigation = navController)
                     }
+
+                    composable(Screen.NewExpense.route) {
+                        NewExpenseScreen(navigation = navController)
+                    }
                 }
             }
         }
@@ -276,6 +281,7 @@ sealed class Screen(
     object EditGroup : Screen("editGroup", "Edit Group")
     object Login : Screen("login", "Login")
     object Register: Screen("register", "Register")
+    object NewExpense: Screen("newExpense", "New Expense")
 
     object GroupDetails : Screen("groupDetails/{groupId}", null) {
         fun createRoute(groupId: String) = "groupDetails/$groupId"

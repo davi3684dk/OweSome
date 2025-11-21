@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.res.imageResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.owesome.data.auth.AuthManager
 import com.owesome.data.entities.Expense
 import com.owesome.data.entities.ExpenseShare
 import com.owesome.data.entities.Group
@@ -15,7 +16,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class GroupViewModel(private val repository: GroupRepository): ViewModel() {
+class GroupViewModel(
+    private val repository: GroupRepository,
+    private val authManager: AuthManager
+): ViewModel() {
+
+
     private var _currentGroup = MutableStateFlow(Group(
         "-1", "", "", listOf(), listOf(), 0f, null
     ))
@@ -52,5 +58,11 @@ class GroupViewModel(private val repository: GroupRepository): ViewModel() {
 
     fun setGroup(group: Group) {
         _currentGroup.value = group
+    }
+
+    fun getGroupMembers(): List<User> {
+        return _currentGroup.value.users.filter {
+            it.id!= authManager.loggedInUser?.id
+        }
     }
 }

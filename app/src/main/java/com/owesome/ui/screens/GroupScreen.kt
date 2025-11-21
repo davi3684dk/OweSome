@@ -159,7 +159,7 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
 
                         ExtendedFloatingActionButton(
                             onClick = {
-                                TODO()
+                                navigation.navigate(Screen.NewExpense.route)
                             },
                             icon = { Icon(Icons.Filled.Add, "Floating action button.") },
                             text = { Text(text = "New Expense")},
