@@ -1,5 +1,6 @@
 package com.owesome.ui.viewmodels
 
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -36,7 +37,6 @@ class ExpenseUiState {
     var groupId by mutableIntStateOf(-1)
 
     val selectedUsers = mutableStateListOf<Int>()
-    val currentUser by mutableIntStateOf(-1)
 
     var customAmount by mutableStateOf(false)
     val maxTitleLength: Int = 30
@@ -46,6 +46,8 @@ class ExpenseViewModel (
     private val expenseRepo: ExpenseRepository,
     private val authManager: AuthManager
 ): ViewModel() {
+
+    var currentUser = authManager.currentUser
 
     var uiState by mutableStateOf(ExpenseUiState())
         private set
@@ -106,7 +108,7 @@ class ExpenseViewModel (
             amount = amount,
             description = uiState.expenseTitle,
             groupId = uiState.groupId,
-            paidBy = authManager.loggedInUser?.id ?: -1,
+            paidBy = currentUser.value?.id ?: -1,
             split = expenseShares
         )
         return expenseCreate

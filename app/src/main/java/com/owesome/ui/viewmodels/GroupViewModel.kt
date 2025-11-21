@@ -20,7 +20,7 @@ class GroupViewModel(
     private val repository: GroupRepository,
     private val authManager: AuthManager
 ): ViewModel() {
-
+    val currentUser = authManager.currentUser
 
     private var _currentGroup = MutableStateFlow(Group(
         "-1", "", "", listOf(), listOf(), 0f, null
@@ -62,7 +62,7 @@ class GroupViewModel(
 
     fun getGroupMembers(): List<User> {
         return _currentGroup.value.users.filter {
-            it.id!= authManager.loggedInUser?.id
+            it.id!= currentUser.value?.id
         }
     }
 }
