@@ -50,7 +50,7 @@ class LoginViewModel(
             val user = userRepo.getUser()
 
             if (user != null) {
-                authManager.loggedInUser = user
+                authManager.setCurrentUser(user)
                 _onComplete.send(user)
             }
         }
@@ -65,7 +65,7 @@ class LoginViewModel(
                 )
                 // Find out if logged in successful
                 if (newUser != null) {
-                    authManager.loggedInUser = newUser
+                    authManager.setCurrentUser(newUser)
                     _onComplete.send(newUser)
                 }
                 else {
