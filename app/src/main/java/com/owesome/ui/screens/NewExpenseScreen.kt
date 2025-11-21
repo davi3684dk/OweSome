@@ -80,11 +80,12 @@ fun NewExpenseScreen(
             )
         }
         OutlinedTextField(
-            value = state.totalAmount,
+            value = if (!state.customAmount) state.totalAmount else "",
             onValueChange = { state.totalAmount = it },
             label = { Text("Total Amount:") },
             singleLine = true,
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+            enabled = !state.customAmount
         )
         Button(
            onClick = { state.customAmount = !state.customAmount }
@@ -138,7 +139,7 @@ fun NewExpenseScreen(
                         value = if(checked) userAmount else "",
                         onValueChange = {
                             userAmount = it;
-                            expenseViewModel.mapUserAmount(user.id, userAmount);
+                            state.newUserMap.put(user.id, userAmount);
                             checked = !userAmount.isEmpty()
                                         },
                         label = { Text("Custom Amount:") },
@@ -152,7 +153,7 @@ fun NewExpenseScreen(
         }
         ExtendedFloatingActionButton(
             onClick = {
-                expenseViewModel.createExpense()
+                expenseViewModel.newCreateExpense()
             },
             icon = { Icon(Icons.Filled.Check, "Floating action button.") },
             text = { Text(text = "Confirm")},

@@ -19,6 +19,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlin.collections.getValue
+import kotlin.collections.mutableListOf
 import kotlin.collections.setValue
 import kotlin.math.exp
 
@@ -28,6 +29,9 @@ class ExpenseUiState {
 
     var totalAmount by mutableStateOf("")
     var totalAmountError by mutableStateOf<String?>(null)
+
+    var newUserMap = mutableStateMapOf<Int,String>()
+    var validatedUserMap = mutableStateMapOf<Int,Float>()
 
     var userMap = mutableStateMapOf<Int,Float>()
     var userMapError = mutableStateMapOf<Int,String?>()
@@ -87,8 +91,6 @@ class ExpenseViewModel (
         }
     }
 
-    /*TODO Refactor the two below functions if there is time...
-       For loop could likely be moved back up into main function */
     fun expenseSharesEven(
         expenseShares: MutableList<ExpenseShareCreate>,
         amount: Float
@@ -177,6 +179,98 @@ class ExpenseViewModel (
                 return null
             }
         }
+        if (tally != totalAmount) {
+            return null
+        }
         return true
     }
+
+    /*
+    TODO New refactored methods for better performance and readability (hopefully)
+     total amount will here not be taken into account when custom amounts are enabled
+     - to use only the switching the createExpense on screen and map inputs should work.
+     */
+
+    fun validateMap(): Boolean {
+        for (entry in uiState.newUserMap) {
+            try {
+                val amount = entry.value.toFloat()
+                uiState.validatedUserMap.put(entry.key,amount)
+                if (amount == 0f) { return false }
+            } catch ( e: Exception ) {
+                return false
+            }
+        }
+        return true
+    }
+
+    fun createCustomExpense(): ExpenseCreate  {
+        val expenseShares = mutableListOf<ExpenseShareCreate>()
+        var sum = 0f
+        for (entry in uiState.validatedUserMap) {
+            sum = sum + entry.value
+            expenseShares.add(createExpenseShare(entry.key, entry.value))
+        }
+        return createBasicExpense(sum, expenseShares)
+    }
+
+    fun createExpenseShare(owedBy: Int, amount: Float): ExpenseShareCreate {
+        val expenseShareCreate = ExpenseShareCreate(
+            owedBy = owedBy,
+            amount = amount
+        )
+        return expenseShareCreate
+    }
+
+    fun createBasicExpense(
+        amount: Float,
+        expenseShares: MutableList<ExpenseShareCreate>
+    ): ExpenseCreate {
+        val expenseCreate = ExpenseCreate(
+            amount = amount,
+            description = uiState.expenseTitle,
+            groupId = uiState.groupId,
+            paidBy = authManager.loggedInUser?.id ?: -1,
+            split = expenseShares
+        )
+        return expenseCreate
+    }
+
+    fun createEvenExpense(amount: Float): ExpenseCreate {
+        val expenseShares = mutableListOf<ExpenseShareCreate>()
+        val split = amount / uiState.selectedUsers.size
+        for (user in uiState.selectedUsers) {
+            expenseShares.add(createExpenseShare(user, split))
+        }
+        return createBasicExpense(amount, expenseShares)
+    }
+
+    fun newCreateExpense() {
+        viewModelScope.launch {
+            val title = validateTitle(uiState.expenseTitle)
+            if (title == null) {
+                uiState.expenseTitleError = "Title Cannot be empty"
+                return@launch
+            }
+            if (!uiState.customAmount) {
+                val amount = validateTotalAmount(uiState.totalAmount)
+                if (amount == null) {
+                    uiState.totalAmountError = "Total Amount is not a valid number"
+                    return@launch
+                }
+                val success = expenseRepo.addExpense(createEvenExpense(amount))
+                if (success) {
+                    _onComplete.send(true)
+                }
+            } else {
+                if (validateMap()) {
+                    val success = expenseRepo.addExpense(createCustomExpense())
+                    if (success) {
+                        _onComplete.send(true)
+                    }
+                }
+            }
+        }
+    }
+
 }
