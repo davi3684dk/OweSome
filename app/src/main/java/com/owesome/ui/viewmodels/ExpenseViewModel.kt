@@ -33,9 +33,6 @@ class ExpenseUiState {
     var newUserMap = mutableStateMapOf<Int,String>()
     var validatedUserMap = mutableStateMapOf<Int,Float>()
 
-    var userMap = mutableStateMapOf<Int,Float>()
-    var userMapError = mutableStateMapOf<Int,String?>()
-
     var groupId by mutableIntStateOf(-1)
 
     val selectedUsers = mutableStateListOf<Int>()
@@ -56,84 +53,6 @@ class ExpenseViewModel (
     private val _onComplete = Channel<Boolean>()
     val onComplete = _onComplete.receiveAsFlow()
 
-    fun createExpense() {
-        viewModelScope.launch {
-            val amount = validateTotalAmount(uiState.totalAmount)
-            if (amount == null) {
-                uiState.totalAmountError = "Total Amount is not a valid number"
-                return@launch
-            }
-            var expenseShares = mutableListOf<ExpenseShareCreate>()
-            if (!uiState.customAmount) {
-                expenseShares = expenseSharesEven(expenseShares, amount)
-            } else {
-                if (validateUserAmounts(amount) == null) {
-                    return@launch
-                }
-                expenseShares = expenseCreateCustom(expenseShares, amount)
-            }
-            val title = validateTitle(uiState.expenseTitle)
-            if (title == null) {
-                uiState.expenseTitleError = "Title Cannot be empty"
-                return@launch
-            }
-            val expenseCreate = ExpenseCreate(
-                amount = amount,
-                description = uiState.expenseTitle,
-                groupId = uiState.groupId,
-                paidBy = authManager.loggedInUser?.id ?: -1,
-                split = expenseShares
-            )
-            val success = expenseRepo.addExpense(expenseCreate)
-            if (success) {
-                _onComplete.send(true)
-            }
-        }
-    }
-
-    fun expenseSharesEven(
-        expenseShares: MutableList<ExpenseShareCreate>,
-        amount: Float
-    ): MutableList<ExpenseShareCreate> {
-        val split = amount / uiState.selectedUsers.size
-        for (user in uiState.selectedUsers) {
-            val expenseShareCreate = ExpenseShareCreate(
-                owedBy = user,
-                amount = split
-            )
-            expenseShares.add(expenseShareCreate)
-        }
-        return expenseShares
-    }
-
-    fun expenseCreateCustom(
-        expenseShares: MutableList<ExpenseShareCreate>,
-        amount: Float
-    ): MutableList<ExpenseShareCreate>  {
-        var toPay = amount
-        for (entry in uiState.userMap) {
-            toPay = toPay - entry.value
-            val expenseShareCreate = ExpenseShareCreate(
-                owedBy = entry.key,
-                amount = entry.value
-            )
-            expenseShares.add(expenseShareCreate)
-        }
-        if (toPay != 0f) {
-            toPay = toPay/(uiState.selectedUsers.size-uiState.userMap.size)
-            for (user in uiState.selectedUsers) {
-                if (!uiState.userMap.containsKey(user)) {
-                    val expenseShareCreate = ExpenseShareCreate(
-                        owedBy = user,
-                        amount = toPay
-                    )
-                    expenseShares.add(expenseShareCreate)
-                }
-            }
-        }
-        return expenseShares
-    }
-
     fun validateTitle(title: String): String? {
         return title.ifEmpty {
             null
@@ -147,49 +66,6 @@ class ExpenseViewModel (
             null
         }
     }
-
-    fun mapUserAmount(user: Int, amount: String) {
-        try {
-            uiState.userMap.put(user,amount.toFloat())
-            if (uiState.userMapError.containsKey(user)) {
-                uiState.userMapError.remove(user)
-            }
-        } catch ( e: Exception ) {
-            if (!amount.isEmpty()) {
-                uiState.userMapError.put(user,"Invalid Amount")
-            } else {
-                uiState.userMapError.remove(user)
-                uiState.userMap.remove(user)
-            }
-        }
-    }
-
-    fun validateUserAmounts(totalAmount: Float): Boolean? {
-        if (!uiState.userMapError.isEmpty()) {
-            return null
-        }
-        var tally = 0.0f
-        for (entry in uiState.userMap) {
-            tally = tally + entry.value
-            if (entry.value > totalAmount) {
-                return null
-            } else if (tally > totalAmount) {
-                return null
-            } else if (entry.value == 0.0f) {
-                return null
-            }
-        }
-        if (tally != totalAmount) {
-            return null
-        }
-        return true
-    }
-
-    /*
-    TODO New refactored methods for better performance and readability (hopefully)
-     total amount will here not be taken into account when custom amounts are enabled
-     - to use only the switching the createExpense on screen and map inputs should work.
-     */
 
     fun validateMap(): Boolean {
         for (entry in uiState.newUserMap) {
@@ -252,25 +128,22 @@ class ExpenseViewModel (
                 uiState.expenseTitleError = "Title Cannot be empty"
                 return@launch
             }
+            var success = false
             if (!uiState.customAmount) {
                 val amount = validateTotalAmount(uiState.totalAmount)
                 if (amount == null) {
                     uiState.totalAmountError = "Total Amount is not a valid number"
                     return@launch
                 }
-                val success = expenseRepo.addExpense(createEvenExpense(amount))
-                if (success) {
-                    _onComplete.send(true)
-                }
+                success = expenseRepo.addExpense(createEvenExpense(amount))
             } else {
                 if (validateMap()) {
-                    val success = expenseRepo.addExpense(createCustomExpense())
-                    if (success) {
-                        _onComplete.send(true)
-                    }
+                    success = expenseRepo.addExpense(createCustomExpense())
                 }
+            }
+            if (success) {
+                _onComplete.send(true)
             }
         }
     }
-
 }
