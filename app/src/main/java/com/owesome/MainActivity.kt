@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -62,6 +63,7 @@ import com.owesome.data.api.RegisterRequest
 import com.owesome.data.auth.AuthManager
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
+import com.owesome.data.repository.UserRepository
 import com.owesome.di.appModule
 import com.owesome.ui.screens.CreateGroupScreen
 import com.owesome.notifications.NotificationFacade
@@ -74,6 +76,7 @@ import com.owesome.ui.screens.RegisterScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import okhttp3.ResponseBody
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -83,6 +86,7 @@ import org.koin.core.context.startKoin
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.math.log
 
 
 class MainActivity : ComponentActivity() {
@@ -120,7 +124,23 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            OweSome()
+            val userRepo: UserRepository = koinInject()
+            val authManager: AuthManager = koinInject()
+
+            val currentUser by authManager.currentUser.collectAsState()
+
+            runBlocking {
+                val user = null //userRepo.getUser()
+                if (user != null) {
+                    authManager.setCurrentUser(user)
+                }
+            }
+
+            if (currentUser != null) {
+                OweSome()
+            } else {
+                AuthNavGraph()
+            }
         }
     }
 }
@@ -135,12 +155,6 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
     val headerTitle by viewModel.title.collectAsState()
 
     val currentStack = navController.currentBackStack.collectAsState()
-
-    LaunchedEffect(Unit) {
-        authManager.loginRequired.collect {
-            //TODO navController.navigate()
-        }
-    }
 
     viewModel.setTitle("Test")
     val notificationFacade = koinInject<NotificationFacade>()
@@ -224,22 +238,8 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
             Surface(modifier = Modifier.padding(innerPadding)) {
                 NavHost(
                     navController = navController,
-                    startDestination = Screen.Login.route
+                    startDestination = Screen.Groups.route
                 ) {
-                    composable(Screen.Login.route) {
-                        LoginScreen(
-                            navController = navController,
-                            onLoginSuccess = { user ->
-                                navController.navigate(Screen.Groups.route) {
-                                    popUpTo(Screen.Login.route) { inclusive = true }
-                                }
-                            }
-                        )
-                    }
-
-                    composable(Screen.Register.route) {
-                        RegisterScreen(navigation = navController)
-                    }
                     composable(Screen.Groups.route) {
                         GroupsScreen(navigation = navController)
                     }
@@ -269,6 +269,40 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
     }
 }
 
+
+@Composable
+fun AuthNavGraph() {
+    val navController = rememberNavController()
+
+    OweSomeTheme(
+        darkTheme = true,
+        dynamicColor = false
+    ) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize()
+        ) { innerPadding ->
+            Surface(modifier = Modifier.padding(innerPadding)) {
+                NavHost(
+                    navController = navController,
+                    startDestination = Screen.Login.route
+                ) {
+                    composable(Screen.Login.route) {
+                        LoginScreen(
+                            navController = navController,
+                            onLoginSuccess = { user ->
+
+                            }
+                        )
+                    }
+
+                    composable(Screen.Register.route) {
+                        RegisterScreen(navigation = navController)
+                    }
+                }
+            }
+        }
+    }
+}
 
 sealed class Screen(
     val route: String,
