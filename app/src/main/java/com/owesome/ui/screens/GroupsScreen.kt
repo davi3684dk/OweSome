@@ -139,6 +139,14 @@ fun GroupsScreen(
                         )
                     }
                 }
+
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp)
+                    )
+                }
             }
 
             ExtendedFloatingActionButton(
