@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -59,6 +60,8 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
     val isLoading by viewModel.isLoading.collectAsState()
     val state = rememberPullToRefreshState()
 
+    val lazyState = rememberLazyListState()
+
     LaunchedEffect(Unit) {
         //Only fetch if group isn't already loaded
         if (groupId != group.id.toString())
@@ -71,6 +74,11 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
 
     LaunchedEffect(group) {
         navViewModel.setTitle(group.name, Icons.Default.Settings)
+    }
+
+    LaunchedEffect(group.expenses.size) {
+        if (group.expenses.isNotEmpty())
+            lazyState.scrollToItem(group.expenses.size - 1)
     }
 
     PullToRefreshBox(
@@ -148,6 +156,7 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
                             .padding(bottom = 10.dp)
                     ) {
                         LazyColumn(
+                            state = lazyState,
                             modifier = Modifier
                                 .padding(10.dp)
                                 .fillMaxSize()
