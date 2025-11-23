@@ -75,7 +75,8 @@ fun EditGroupScreen(
         viewModel.setGroup(groupViewModel.currentGroup.value)
 
         viewModel.onComplete.collect {
-            groupViewModel.setGroup(it) //update group of shared viewmodel before navigating
+            groupViewModel.setGroup(it.id) //update group of shared viewmodel before navigating
+            groupViewModel.getAllGroups() //update group list
             navigation.popBackStack()
         }
     }

@@ -43,7 +43,10 @@ data class GroupDTO(
     val members: List<UserDTO>,
 
     @SerializedName("expenses")
-    val expenses: List<ExpenseDTO>
+    val expenses: List<ExpenseDTO>,
+
+    @SerializedName("settlements")
+    val settlements: List<SettlementDTO>
 )
 
 data class GroupResponseDTO(

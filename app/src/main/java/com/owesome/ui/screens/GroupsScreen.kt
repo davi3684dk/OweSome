@@ -104,7 +104,7 @@ fun GroupsScreen(
                             modifier = Modifier.fillMaxSize().padding(10.dp)
                         ) {
                             Text(group.name)
-                            Text("Status: " + group.status + "kr.")
+                            Text("Status: " + String.format("%.2f", group.status) + "kr.")
                         }
 
                         AsyncImage(
@@ -138,6 +138,14 @@ fun GroupsScreen(
                             )
                         )
                     }
+                }
+
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp)
+                    )
                 }
             }
 

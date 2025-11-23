@@ -9,7 +9,14 @@ import com.owesome.data.api.mappers.toUser
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
 import kotlinx.coroutines.delay
+import org.json.JSONObject
 import retrofit2.HttpException
+
+sealed class Result<out T> {
+    data class Success<T>(val value: T) : Result<T>()
+    data class Error(val message: String): Result<Nothing>()
+    data class ConnectionError(val message: String): Result<Nothing>()
+}
 
 interface UserRepository {
 
@@ -18,7 +25,7 @@ interface UserRepository {
     suspend fun registerUser(user: UserCreate): Boolean
     suspend fun getUserIdByName(username: String): User?
     suspend fun logoutUser(): Boolean
-    suspend fun getUser(): User?
+    suspend fun getUser(): Result<User?>
 }
 
 class UserRepositoryImpl(
@@ -59,7 +66,6 @@ class UserRepositoryImpl(
             password = user.password,
             phone = user.phone
         ))
-
         //Response validation, did we actually register?
         if (response.isSuccessful) {
             return true
@@ -100,15 +106,19 @@ class UserRepositoryImpl(
 
     }
 
-    override suspend fun getUser(): User? {
+    override suspend fun getUser(): Result<User?> {
         val response = authApiService.user()
 
         val body = response.body()
 
         if (response.isSuccessful && body != null) {
-            return body.toUser()
+            return Result.Success(body.toUser())
         } else {
-            return null
+            if (response.code() == 502) {
+                return Result.ConnectionError(response.message())
+            } else {
+                return Result.Error(response.message())
+            }
         }
     }
 }

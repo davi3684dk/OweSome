@@ -248,6 +248,7 @@ fun GroupEditorForm(
                 AddUserDialog(
                     onUserAdded = { user ->
                         onUserAdded(user)
+                        openAddDialog.value = false
                     }
                 )
             }

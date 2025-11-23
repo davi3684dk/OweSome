@@ -61,7 +61,7 @@ class RegisterViewModel(
         ) {
             // Validation check complete, all good, register!
             viewModelScope.launch {
-                val newUser = userRepo.registerUser(
+                val registrationSuccessful = userRepo.registerUser(
                     user = UserCreate(
                         uiState.username,
                         uiState.email,
@@ -70,11 +70,11 @@ class RegisterViewModel(
                     )
                 )
                 // Find out if user registered succesfully
-                if (newUser != null) {
+                if (registrationSuccessful) {
                     _onComplete.send(true)
                 }
                 else {
-                    uiState.errorMsg = "Register failed: unknown error"
+                    uiState.errorMsg = "Registration failed: unknown error"
                 }
             }
 
