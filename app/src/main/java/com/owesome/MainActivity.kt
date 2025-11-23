@@ -27,7 +27,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,11 +39,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -84,6 +80,7 @@ import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.screens.LoginScreen
 import com.owesome.ui.screens.NewExpenseScreen
 import com.owesome.ui.screens.RegisterScreen
+import com.owesome.ui.screens.ProfileScreen
 import com.owesome.ui.screens.SplashScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
@@ -231,7 +228,6 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
         darkTheme = true,
         dynamicColor = false
     ) {
-
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
@@ -312,6 +308,7 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                     composable(Screen.Groups.route) {
                         GroupsScreen(navigation = navController)
                     }
+
                     composable(
                         Screen.GroupDetails.route
                     ) { backStackEntry ->
@@ -328,6 +325,9 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                     composable(Screen.EditGroup.route) {
                         EditGroupScreen(navigation = navController)
                     }
+                    composable ( Screen.Profile.route ){
+                        ProfileScreen(navigation = navController)
+
 
                     composable(Screen.NewExpense.route) {
                         NewExpenseScreen(navigation = navController)
@@ -380,6 +380,7 @@ sealed class Screen(
     object Groups : Screen("groups", "Groups")
     object Profile : Screen("profile", "Profile")
     object Settings : Screen("settings", "Settings")
+    object Notifications : Screen("notifications", "Notifications")
     object CreateGroup : Screen("createGroup", "Create Group")
     object EditGroup : Screen("editGroup", "Edit Group")
     object Login : Screen("login", "Login")
