@@ -1,6 +1,7 @@
 package com.owesome.data.api.dto
 
 import com.google.gson.annotations.SerializedName
+import java.time.Instant
 
 data class ExpenseShareDTO(
     @SerializedName("ID")
@@ -14,6 +15,8 @@ data class ExpenseShareDTO(
 data class ExpenseDTO(
     @SerializedName("ID")
     val id: Int,
+    @SerializedName("CreatedAt")
+    val createdAt: String,
     @SerializedName("Amount")
     val amount: Float,
     @SerializedName("Description")
@@ -23,5 +26,7 @@ data class ExpenseDTO(
     @SerializedName("ExpenseShares")
     val expenseShares: List<ExpenseShareDTO>,
     @SerializedName("Status")
-    val status: Float
+    val status: Float,
+    @SerializedName("Settled")
+    val settled: Boolean
 )

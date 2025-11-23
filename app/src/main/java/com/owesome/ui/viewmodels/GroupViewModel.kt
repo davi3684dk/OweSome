@@ -10,6 +10,7 @@ import com.owesome.data.entities.Expense
 import com.owesome.data.entities.ExpenseShare
 import com.owesome.data.entities.Group
 import com.owesome.data.entities.GroupCompact
+import com.owesome.data.entities.Settlement
 import com.owesome.data.entities.User
 import com.owesome.data.repository.GroupRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +24,7 @@ class GroupViewModel(
     val currentUser = authManager.currentUser
 
     private var _currentGroup = MutableStateFlow(Group(
-        "-1", "", "", listOf(), listOf(), 0f, null
+        "-1", "", "", listOf(), listOf(), 0f, null, listOf()
     ))
     val currentGroup: StateFlow<Group> get() = _currentGroup
 
@@ -32,7 +33,6 @@ class GroupViewModel(
 
     var groups = mutableStateListOf<GroupCompact>()
         private set
-
 
     fun getAllGroups() {
         _isLoading.value = true
@@ -63,6 +63,25 @@ class GroupViewModel(
     fun getGroupMembers(): List<User> {
         return _currentGroup.value.users.filter {
             it.id!= currentUser.value?.id
+        }
+    }
+
+    fun settleGroup() {
+        _isLoading.value = true
+
+        viewModelScope.launch {
+            repository.settleGroup(currentGroup.value.id)
+            _isLoading.value = false
+        }
+    }
+
+    fun confirmSettlement(settlement: Settlement) {
+        _isLoading.value = true
+
+        viewModelScope.launch {
+            repository.confirmSettlement(settlement.id)
+            setGroup(_currentGroup.value.id)
+            _isLoading.value = false
         }
     }
 }
