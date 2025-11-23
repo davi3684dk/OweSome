@@ -30,4 +30,10 @@ interface GroupApiService {
 
     @PATCH("/groups/{id}")
     suspend fun updateGroup(@Path("id") groupId: String, @Body group: UpdateGroupDTO): Response<GroupResponseDTO>
+
+    @POST("/settlements/create")
+    suspend fun settleGroup(@Body settleRequest: SettleRequestDTO): Response<Unit>
+
+    @POST("/settlements/{id}/confirm")
+    suspend fun confirmSettlement(@Path("id") settlementId: Int): Response<Unit>
 }

@@ -89,8 +89,12 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = state.username,
-            onValueChange = { state.username = it },
+            onValueChange = {
+                state.username = it
+                state.usernameError = viewModel.validateUsername(it)
+            },
             label = { Text("Username") },
+            isError = state.emailError != null,
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -105,7 +109,10 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = state.email,
-            onValueChange = { state.email = it },
+            onValueChange = {
+                state.email = it
+                state.emailError = viewModel.validateEmail(it)
+            },
             label = { Text("Email") },
             isError = state.emailError != null,
             singleLine = true,
@@ -157,7 +164,10 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = state.password,
-            onValueChange = { state.password = it },
+            onValueChange = {
+                state.password = it
+                state.passwordError = viewModel.validatePassword(it)
+            },
             label = { Text("Password") },
             singleLine = true,
             isError = state.passwordError != null,
@@ -186,7 +196,10 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = state.confirmPassword,
-            onValueChange = { state.confirmPassword = it },
+            onValueChange = {
+                state.confirmPassword = it
+                state.confirmPasswordError = viewModel.validateConfirmPassword(state.password, it)
+            },
             label = { Text("Confirm Password") },
             singleLine = true,
             isError = state.confirmPasswordError != null,
