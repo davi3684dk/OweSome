@@ -174,25 +174,43 @@ class MainActivity : ComponentActivity() {
                 }
             }
             OweSomeTheme {
-                alert?.let {
+                alert?.let { a ->
                     AlertDialog(
                         onDismissRequest = {
-                            exitProcess(-1)
+                            alertManager.hideAlert()
+
+                            if (a.onDismiss != null)
+                                a.onDismiss()
+                        },
+                        dismissButton = {
+                            a.onDismiss?.let {
+                                Button(
+                                    onClick = {
+                                        alertManager.hideAlert()
+                                        it()
+                                    }
+                                ) {
+                                    Text(a.dismissText ?: "")
+                                }
+                            }
                         },
                         confirmButton = {
-                            Button(
-                                onClick = {
-                                    it.onDismiss()
+                            a.onConfirm?.let {
+                                Button(
+                                    onClick = {
+                                        alertManager.hideAlert()
+                                        it()
+                                    }
+                                ) {
+                                    Text(a.confirmText ?: "")
                                 }
-                            ) {
-                                Text("OK")
                             }
                         },
                         text = {
-                            Text(it.message)
+                            Text(a.message)
                         },
                         title = {
-                            Text(it.title)
+                            Text(a.title)
                         }
                     )
                 }

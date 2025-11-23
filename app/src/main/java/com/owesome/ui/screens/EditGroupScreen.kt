@@ -19,9 +19,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddCircleOutline
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
@@ -49,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.owesome.Screen
 import com.owesome.data.entities.Group
 import com.owesome.data.entities.User
 import com.owesome.ui.composables.AddUserDialog
@@ -57,6 +61,8 @@ import com.owesome.ui.viewmodels.GroupEditorUiState
 import com.owesome.ui.viewmodels.GroupEditorViewModel
 import com.owesome.ui.viewmodels.GroupViewModel
 import com.owesome.ui.viewmodels.NavViewModel
+import com.owesome.util.AlertManager
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -65,13 +71,13 @@ fun EditGroupScreen(
     navigation: NavController,
     viewModel: GroupEditorViewModel = koinViewModel(),
     navViewModel: NavViewModel = koinActivityViewModel(),
-    groupViewModel: GroupViewModel = koinActivityViewModel()
+    groupViewModel: GroupViewModel = koinActivityViewModel(),
+    alertManager: AlertManager = koinInject()
 ) {
     val context = LocalContext.current
     val uiState = viewModel.uiState
 
     LaunchedEffect(Unit) {
-        navViewModel.setTitle(groupViewModel.currentGroup.value.name)
         viewModel.setGroup(groupViewModel.currentGroup.value)
 
         viewModel.onComplete.collect {
@@ -80,6 +86,34 @@ fun EditGroupScreen(
             navigation.popBackStack()
         }
     }
+
+    LaunchedEffect(Unit) {
+        if (uiState.isOwner) {
+            navViewModel.setTitle(uiState.groupName, Icons.Default.Delete)
+            navViewModel.settingsPressed.collect {
+                alertManager.showYesNoAlert("Delete Group", "Are you sure you want to delete the group?", {}, {
+                    groupViewModel.deleteGroup {
+                        navigation.navigate(Screen.Groups.route) {
+                            popUpTo(Screen.Groups.route)
+                        }
+                    }
+                })
+            }
+        } else {
+            navViewModel.setTitle(uiState.groupName, Icons.AutoMirrored.Filled.Logout)
+            navViewModel.settingsPressed.collect {
+                alertManager.showYesNoAlert("Leave Group", "Are you sure you want to leave the group?", {}, {
+                    groupViewModel.leaveGroup {
+                        navigation.navigate(Screen.Groups.route) {
+                            popUpTo(Screen.Groups.route)
+                        }
+                    }
+                })
+            }
+        }
+
+    }
+
 
     GroupEditorForm(
         uiState,

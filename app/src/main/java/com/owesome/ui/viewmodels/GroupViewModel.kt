@@ -24,7 +24,7 @@ class GroupViewModel(
     val currentUser = authManager.currentUser
 
     private var _currentGroup = MutableStateFlow(Group(
-        "-1", "", "", listOf(), listOf(), 0f, null, listOf()
+        "-1", "", "", listOf(), listOf(), 0f, null, listOf(), User(-1, "", "", "")
     ))
     val currentGroup: StateFlow<Group> get() = _currentGroup
 
@@ -81,6 +81,30 @@ class GroupViewModel(
         viewModelScope.launch {
             repository.confirmSettlement(settlement.id)
             setGroup(_currentGroup.value.id)
+            _isLoading.value = false
+        }
+    }
+
+    fun deleteGroup(onComplete: () -> Unit) {
+        _isLoading.value = true
+
+        viewModelScope.launch {
+            repository.deleteGroup(_currentGroup.value.id)
+            getAllGroups() //update group list
+            onComplete()
+
+            _isLoading.value = false
+        }
+    }
+
+    fun leaveGroup(onComplete: () -> Unit) {
+        _isLoading.value = true
+
+        viewModelScope.launch {
+            repository.removeUser(_currentGroup.value.id, currentUser.value?.id ?: -1)
+            getAllGroups() //update group list
+            onComplete()
+
             _isLoading.value = false
         }
     }

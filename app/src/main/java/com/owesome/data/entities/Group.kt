@@ -10,7 +10,8 @@ data class Group(
     val expenses: List<Expense>,
     val status: Float,
     val image: ImageBitmap?,
-    val settlements: List<Settlement>
+    val settlements: List<Settlement>,
+    val owner: User
 )
 
 data class GroupCompact(

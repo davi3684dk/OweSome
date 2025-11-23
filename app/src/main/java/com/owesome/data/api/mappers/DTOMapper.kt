@@ -48,7 +48,8 @@ fun GroupDTO.toGroup(): Group {
         image = ImageUtil.decodeBase64ToImageBitmap(this.image),
         settlements = this.settlements.map { 
             it.toSettlement()
-        }
+        },
+        owner = this.admin.toUser()
     )
 }
 

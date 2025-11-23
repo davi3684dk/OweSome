@@ -7,6 +7,7 @@ import com.owesome.data.entities.GroupCompact
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -15,6 +16,9 @@ import retrofit2.http.Path
 interface GroupApiService {
     @GET("/groups")
     suspend fun getGroups(): Response<GroupListDTO>
+
+    @DELETE("/groups/{id}")
+    suspend fun deleteGroup(@Path("id") groupId: String): Response<Unit>
 
     @GET("/groups/{id}")
     suspend fun getGroup(@Path("id") groupId: String): Response<GroupDTO>

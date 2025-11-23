@@ -4,14 +4,17 @@ import android.content.Context
 import android.net.Uri
 import android.util.Base64
 import androidx.compose.runtime.IntState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.owesome.data.auth.AuthManager
 import com.owesome.data.entities.Group
 import com.owesome.data.entities.User
 import com.owesome.data.repository.GroupRepository
@@ -27,12 +30,14 @@ class GroupEditorUiState {
     var imageError by mutableStateOf(false)
     var nameError by mutableStateOf(false)
     var users = mutableStateListOf<User>()
+    var isOwner by mutableStateOf(false)
 
     val maxGroupNameLength: Int = 30
 }
 
 class GroupEditorViewModel(
-    private val groupRepository: GroupRepository
+    private val groupRepository: GroupRepository,
+    private val authManager: AuthManager
 ) : ViewModel() {
     var uiState by mutableStateOf(GroupEditorUiState())
         private set
@@ -45,9 +50,11 @@ class GroupEditorViewModel(
     var addedUsers = mutableStateListOf<Int>()
 
     fun setGroup(group: Group) {
+        uiState.isOwner = group.owner.id == authManager.currentUser.value?.id
         uiState.groupName = group.name
         uiState.groupId = group.id
-        uiState.users.addAll(group.users)
+        uiState.users.clear()
+        uiState.users.addAll(group.users.filter { it.id != authManager.currentUser.value?.id })
         uiState.groupImage = group.image
     }
 
