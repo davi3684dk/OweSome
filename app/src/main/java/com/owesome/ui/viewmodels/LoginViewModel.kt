@@ -46,14 +46,14 @@ class LoginViewModel(
     val onComplete = _onComplete.receiveAsFlow()
 
     init {
-        viewModelScope.launch {
+        /*viewModelScope.launch {
             val user = userRepo.getUser()
 
             if (user != null) {
                 authManager.setCurrentUser(user)
                 _onComplete.send(user)
             }
-        }
+        }*/
     }
 
     fun loginUser() {

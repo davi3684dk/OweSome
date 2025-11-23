@@ -7,6 +7,7 @@ import coil.network.HttpException
 import com.owesome.data.api.GroupApiService
 import com.owesome.data.api.dto.AddMemberDTO
 import com.owesome.data.api.dto.CreateGroupDTO
+import com.owesome.data.api.dto.SettleRequestDTO
 import com.owesome.data.api.dto.UpdateGroupDTO
 import com.owesome.data.api.mappers.toCompactGroup
 import com.owesome.data.api.mappers.toGroup
@@ -28,6 +29,9 @@ interface GroupRepository {
     suspend fun createGroup(name: String, description: String, users: List<User>, imageBase64: String): Group?
     suspend fun addUser(groupId: String, userId: Int)
     suspend fun updateGroup(groupId: String, name: String, description: String, addedUsers: List<Int>, removedUsers: List<Int>, imageBase64: String): Group?
+
+    suspend fun settleGroup(groupId: String)
+    suspend fun confirmSettlement(id: Int)
 }
 
 class GroupRepositoryImpl(
@@ -80,7 +84,8 @@ class GroupRepositoryImpl(
                 users = users,
                 expenses = listOf(),
                 status = 0f,
-                image = ImageUtil.decodeBase64ToImageBitmap(group.image)
+                image = ImageUtil.decodeBase64ToImageBitmap(group.image),
+                settlements = listOf()
             )
         }
 
@@ -116,6 +121,18 @@ class GroupRepositoryImpl(
             null
         }
 
+    }
+
+    override suspend fun settleGroup(groupId: String) {
+        groupApiService.settleGroup(SettleRequestDTO(
+            groupId = groupId.toInt()
+        ))
+    }
+
+    override suspend fun confirmSettlement(id: Int) {
+        delay(1000)
+
+        groupApiService.confirmSettlement(id)
     }
 
     override suspend fun addUser(groupId: String, userId: Int) {
