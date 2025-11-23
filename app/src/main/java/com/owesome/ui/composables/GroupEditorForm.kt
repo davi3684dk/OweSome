@@ -1,5 +1,6 @@
 package com.owesome.ui.composables
 
+import ads_mobile_sdk.ui
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -61,7 +62,7 @@ fun GroupEditorForm(
     onUserAdded: (User) -> Unit,
     onUserRemoved: (User) -> Unit,
     onSubmit: () -> Unit,
-    submitButtonText: String
+    submitButtonText: String?
 ) {
     val openAddDialog = remember { mutableStateOf(false) }
 
@@ -94,7 +95,8 @@ fun GroupEditorForm(
             ) {
                 Surface(
                     onClick = {
-                        pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        if (uiState.isOwner)
+                            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     },
                     modifier = Modifier.border(
                         width = 2.dp,
@@ -122,6 +124,7 @@ fun GroupEditorForm(
                     onValueChange = { it ->
                         onNameChange(it)
                     },
+                    enabled = uiState.isOwner,
                     label = { Text("Group Name") },
                     singleLine = true,
                     isError = uiState.nameError,
@@ -191,17 +194,19 @@ fun GroupEditorForm(
                                         )
                                         Text(user.username)
                                     }
-                                    IconButton(
-                                        onClick = {
-                                            onUserRemoved(user)
-                                        },
-                                        modifier = Modifier.padding(end = 10.dp).size(32.dp),
-                                    ) {
-                                        Icon(
-                                            Icons.Default.RemoveCircle,
-                                            contentDescription = "Remove Icon",
-                                            tint = MaterialTheme.colorScheme.error,
-                                        )
+                                    if (uiState.isOwner) {
+                                        IconButton(
+                                            onClick = {
+                                                onUserRemoved(user)
+                                            },
+                                            modifier = Modifier.padding(end = 10.dp).size(32.dp),
+                                        ) {
+                                            Icon(
+                                                Icons.Default.RemoveCircle,
+                                                contentDescription = "Remove Icon",
+                                                tint = MaterialTheme.colorScheme.error,
+                                            )
+                                        }
                                     }
                                 }
                                 HorizontalDivider()
@@ -209,36 +214,40 @@ fun GroupEditorForm(
                         }
                     }
                 }
-                Button(
-                    onClick = {
-                        openAddDialog.value = true
-                    },
-                    modifier = Modifier.padding(top = 10.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                if (uiState.isOwner) {
+                    Button(
+                        onClick = {
+                            openAddDialog.value = true
+                        },
+                        modifier = Modifier.padding(top = 10.dp)
                     ) {
-                        Icon(
-                            Icons.Default.AddCircleOutline,
-                            contentDescription = "Add participant",
-                            modifier = Modifier.size(32.dp).padding(end = 10.dp),
-                        )
-                        Text(
-                            "Add participant",
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                Icons.Default.AddCircleOutline,
+                                contentDescription = "Add participant",
+                                modifier = Modifier.size(32.dp).padding(end = 10.dp),
+                            )
+                            Text(
+                                "Add participant",
+                            )
+                        }
                     }
                 }
             }
         }
-        FloatingActionButton(
-            onClick = {
-                onSubmit()
+        submitButtonText?.let {
+            FloatingActionButton(
+                onClick = {
+                    onSubmit()
+                }
+            ) {
+                Text(
+                    text = submitButtonText,
+                    modifier = Modifier.padding(20.dp)
+                )
             }
-        ) {
-            Text(
-                text = submitButtonText,
-                modifier = Modifier.padding(20.dp)
-            )
         }
 
         if (openAddDialog.value) {

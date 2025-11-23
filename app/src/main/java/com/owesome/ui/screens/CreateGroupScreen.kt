@@ -63,6 +63,7 @@ fun CreateGroupScreen(viewModel: GroupEditorViewModel = koinInject(), navViewMod
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
+        viewModel.uiState.isOwner = true
         navViewModel.setTitle("Start a Group")
         viewModel.onComplete.collect {
             groupViewModel.setGroup(it) //update group of shared viewmodel before navigating

@@ -1,9 +1,5 @@
 package com.owesome.data.repository
 
-import android.graphics.BitmapFactory
-import android.util.Base64
-import androidx.compose.ui.graphics.asImageBitmap
-import coil.network.HttpException
 import com.owesome.data.api.GroupApiService
 import com.owesome.data.api.dto.AddMemberDTO
 import com.owesome.data.api.dto.CreateGroupDTO
@@ -11,16 +7,13 @@ import com.owesome.data.api.dto.SettleRequestDTO
 import com.owesome.data.api.dto.UpdateGroupDTO
 import com.owesome.data.api.mappers.toCompactGroup
 import com.owesome.data.api.mappers.toGroup
-import com.owesome.data.entities.Expense
-import com.owesome.data.entities.ExpenseCreate
-import com.owesome.data.entities.ExpenseShare
+import com.owesome.data.api.mappers.toUser
 import com.owesome.data.entities.Group
 import com.owesome.data.entities.GroupCompact
 import com.owesome.data.entities.User
 import com.owesome.util.ImageUtil
 import kotlinx.coroutines.delay
 import java.lang.Exception
-import kotlin.math.exp
 
 interface GroupRepository {
     suspend fun getAllGroups(): List<GroupCompact>
@@ -32,6 +25,8 @@ interface GroupRepository {
 
     suspend fun settleGroup(groupId: String)
     suspend fun confirmSettlement(id: Int)
+    suspend fun deleteGroup(id: String)
+    suspend fun removeUser(groupId: String, userId: Int)
 }
 
 class GroupRepositoryImpl(
@@ -85,7 +80,8 @@ class GroupRepositoryImpl(
                 expenses = listOf(),
                 status = 0f,
                 image = ImageUtil.decodeBase64ToImageBitmap(group.image),
-                settlements = listOf()
+                settlements = listOf(),
+                owner = group.admin.toUser()
             )
         }
 
@@ -135,7 +131,17 @@ class GroupRepositoryImpl(
         groupApiService.confirmSettlement(id)
     }
 
+    override suspend fun deleteGroup(id: String) {
+        groupApiService.deleteGroup(id)
+    }
+
     override suspend fun addUser(groupId: String, userId: Int) {
         TODO("Not yet implemented")
+    }
+
+    override suspend fun removeUser(groupId: String, userId: Int) {
+        groupApiService.removeMember(groupId, AddMemberDTO(
+            userId = userId
+        ))
     }
 }
