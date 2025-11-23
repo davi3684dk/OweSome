@@ -145,6 +145,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        val store = viewModelStore
+
         enableEdgeToEdge()
         setContent {
             val userRepo: UserRepository = koinInject()
@@ -230,6 +232,7 @@ class MainActivity : ComponentActivity() {
                     if (currentUser != null) {
                         OweSome()
                     } else {
+                        store.clear()
                         AuthNavGraph()
                     }
                 } else {

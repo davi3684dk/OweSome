@@ -13,17 +13,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +40,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.owesome.Screen
+import com.owesome.data.auth.AuthManager
 import com.owesome.ui.viewmodels.NavViewModel
+import org.koin.compose.currentKoinScope
+import org.koin.compose.getKoin
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 
 // Enable users to update their profiles and manage notification settings.
@@ -95,6 +104,8 @@ fun AccountManagementContent(navigation: NavHostController) {
     var oldPassword by rememberSaveable { mutableStateOf("") }
     var newPassword by rememberSaveable { mutableStateOf("") }
     var confirmNewPassword by rememberSaveable { mutableStateOf("") }
+
+    val authManager = koinInject<AuthManager>()
 
     Column (
         modifier = Modifier
@@ -178,6 +189,27 @@ fun AccountManagementContent(navigation: NavHostController) {
             text = { Text(text = "Update password")},
             modifier = Modifier.padding(13.dp)
         )
+
+        TextButton(
+            onClick = {
+                authManager.clearTokens()
+                navigation.navigate(Screen.Groups.route) {
+                    popUpTo(Screen.Groups.route)
+                }
+            },
+            modifier = Modifier.padding(top = 20.dp)
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.Logout,
+                "Logout Icon",
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(end = 5.dp)
+            )
+            Text(
+                "Logout",
+                color = MaterialTheme.colorScheme.error
+            )
+        }
     }
 }
 
