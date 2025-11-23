@@ -62,15 +62,13 @@ init {
 
 
     suspend fun listen() {
-        while (true) {
-            val notifications = notificationRepository.getNewNotification()
-            if (notifications != null) {
-                for (notification in notifications) {
-                    sendNotification(notification.message, "OweSome")
-                }
+        val notifications = notificationRepository.getNewNotification()
+        if (notifications != null) {
+            for (notification in notifications) {
+                sendNotification(notification.message, "OweSome")
             }
-
-            delay(10.seconds )
         }
+
+        delay(10.seconds )
     }
 }

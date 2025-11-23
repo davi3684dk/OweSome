@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
@@ -87,9 +88,13 @@ import com.owesome.ui.screens.SplashScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
 import com.owesome.util.AlertManager
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.ResponseBody
+import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.koinInject
@@ -119,6 +124,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    var pollingJob: Job? = null
+
+    private val notificationFacade: NotificationFacade by inject()
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -136,12 +145,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
-
         enableEdgeToEdge()
         setContent {
-            val notificationFacade = koinInject<NotificationFacade>()
-
             val userRepo: UserRepository = koinInject()
             val authManager: AuthManager = koinInject()
             val alertManager: AlertManager = koinInject()
@@ -153,10 +158,6 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
 
             val alert by alertManager.alert.collectAsState()
-
-            LaunchedEffect(Unit) {
-                notificationFacade.listen()
-            }
 
             LaunchedEffect(Unit) {
                 val user = userRepo.getUser()
@@ -218,6 +219,19 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        pollingJob = lifecycleScope.launch {
+            while (isActive)
+                notificationFacade.listen()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        pollingJob?.cancel()
     }
 }
 
