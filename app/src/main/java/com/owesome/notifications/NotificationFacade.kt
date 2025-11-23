@@ -1,8 +1,11 @@
 package com.owesome.notifications
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.owesome.R
@@ -11,7 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.time.delay
 import kotlin.time.Duration.Companion.seconds
 
-const val CHANNEL_ID = "owesome_notification_channel"
+const val CHANNEL_ID = "owesome_notification_channel2"
 class NotificationFacade(
     private val context: Context,
     private val notificationRepository: NotificationRepository
@@ -28,7 +31,7 @@ init {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 context.getString(R.string.channel_name),
-                NotificationManager.IMPORTANCE_DEFAULT).apply {
+                NotificationManager.IMPORTANCE_HIGH).apply {
                 description =  context.getString(R.string.channel_description)
             }
             // Register the channel with the system.
@@ -39,13 +42,14 @@ init {
 
     }
 
-
     var notificationCount = 0
     fun sendNotification(text: String, title: String) {
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.notification_icon)
+            .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.drawable.notification_icon))
             .setContentTitle(title)
             .setContentText(text)
+            .setDefaults(Notification.DEFAULT_ALL)
             .setPriority(NotificationCompat.PRIORITY_MAX)
 
         val notificationManager =

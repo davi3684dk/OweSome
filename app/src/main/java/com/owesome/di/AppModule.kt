@@ -39,6 +39,7 @@ val appModule = module {
     singleOf(::GroupRepositoryImpl) bind GroupRepository::class
     singleOf(::UserRepositoryImpl) bind UserRepository::class
     singleOf(::ExpenseRepositoryImpl) bind ExpenseRepository::class
+    singleOf(::NotificationRepositoryImpl) bind NotificationRepository::class
     single { get<RetroFitClient>().groupApi }
     single { get<RetroFitClient>().authApi }
     single { get<RetroFitClient>().userApi }

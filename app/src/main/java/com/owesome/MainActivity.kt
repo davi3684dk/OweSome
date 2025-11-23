@@ -142,9 +142,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             val notificationFacade = koinInject<NotificationFacade>()
 
-            LaunchedEffect(Unit) {
-                notificationFacade.listen()
-            }
             val userRepo: UserRepository = koinInject()
             val authManager: AuthManager = koinInject()
             val alertManager: AlertManager = koinInject()
@@ -156,6 +153,10 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
 
             val alert by alertManager.alert.collectAsState()
+
+            LaunchedEffect(Unit) {
+                notificationFacade.listen()
+            }
 
             LaunchedEffect(Unit) {
                 val user = userRepo.getUser()
