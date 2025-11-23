@@ -16,6 +16,7 @@ import com.owesome.notifications.NotificationFacade
 import com.owesome.ui.viewmodels.ExpenseViewModel
 import com.owesome.ui.viewmodels.LoginViewModel
 import com.owesome.ui.viewmodels.RegisterViewModel
+import com.owesome.util.AlertManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
@@ -30,6 +31,7 @@ val appModule = module {
     viewModelOf(::ExpenseViewModel)
     singleOf(::AuthManager)
     singleOf(::RetroFitClient)
+    singleOf(::AlertManager)
     viewModelOf(::AddUserViewModel)
     viewModelOf(::GroupEditorViewModel)
     singleOf(::GroupRepositoryImpl) bind GroupRepository::class
