@@ -1,6 +1,7 @@
 package com.owesome
 
 import android.Manifest
+import android.content.Context
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
@@ -55,6 +56,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
@@ -71,6 +73,7 @@ import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
 import com.owesome.data.repository.Result
 import com.owesome.data.repository.UserRepository
+import com.owesome.data.repository.NotificationRepository
 import com.owesome.di.appModule
 import com.owesome.ui.screens.CreateGroupScreen
 import com.owesome.notifications.NotificationFacade
@@ -85,9 +88,13 @@ import com.owesome.ui.screens.SplashScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
 import com.owesome.util.AlertManager
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.ResponseBody
+import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.koinInject
@@ -116,6 +123,10 @@ class MainActivity : ComponentActivity() {
             // decision.
         }
     }
+
+    var pollingJob: Job? = null
+
+    private val notificationFacade: NotificationFacade by inject()
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -227,12 +238,28 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onStart() {
+        super.onStart()
+        pollingJob = lifecycleScope.launch {
+            while (isActive)
+                notificationFacade.listen()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        pollingJob?.cancel()
+    }
 }
 
 @SuppressLint("RestrictedApi")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: AuthManager = koinInject()) {
+fun OweSome(
+    viewModel: NavViewModel = koinActivityViewModel(),
+    authManager: AuthManager = koinInject(),
+) {
     val navController = rememberNavController()
     var selectedDestination by rememberSaveable { mutableStateOf(Screen.Groups.route) }
 
