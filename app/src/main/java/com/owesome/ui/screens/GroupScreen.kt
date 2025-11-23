@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -115,6 +116,7 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
     val isLoading by viewModel.isLoading.collectAsState()
     val state = rememberPullToRefreshState()
 
+    val lazyState = rememberLazyListState()
     val currentUser by viewModel.currentUser.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -129,6 +131,11 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
 
     LaunchedEffect(group) {
         navViewModel.setTitle(group.name, Icons.Default.Settings)
+    }
+
+    LaunchedEffect(group.expenses.size) {
+        if (group.expenses.isNotEmpty())
+            lazyState.scrollToItem(group.expenses.size - 1)
     }
 
     val unpaidSettlements = group.settlements.filter {
@@ -264,6 +271,7 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
                                 .padding(bottom = 10.dp)
                         ) {
                             LazyColumn(
+                                state = lazyState,
                                 modifier = Modifier
                                     .padding(10.dp)
                                     .fillMaxSize()
@@ -278,6 +286,14 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
                                         is SettlementMessage -> SettlementBox(message.settlement, currentUser?.id ?: -1)
                                     }
 
+                                }
+
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(60.dp)
+                                    )
                                 }
                             }
 
