@@ -266,7 +266,6 @@ fun OweSome(
     viewModel: NavViewModel = koinActivityViewModel()
 ) {
     val navController = rememberNavController()
-    var selectedDestination by rememberSaveable { mutableStateOf(Screen.Groups.route) }
     val headerTitle by viewModel.title.collectAsState()
     val currentStack = navController.currentBackStack.collectAsState()
 
@@ -302,14 +301,13 @@ fun OweSome(
         bottomBar = {
             NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
                 NavigationBarItem(
-                    selected = selectedDestination == Screen.Groups.route,
+                    selected = currentStack.value.lastOrNull()?.destination?.route == Screen.Groups.route,
                     onClick = {
                         navController.navigate(route = Screen.Groups.route) {
                             popUpTo(Screen.Groups.route) {
                                 inclusive = true
                             }
                         }
-                        selectedDestination = Screen.Groups.route
                     },
                     icon = {
                         Icon(
@@ -320,10 +318,9 @@ fun OweSome(
                     label = { Screen.Groups.label?.let { Text(it) } }
                 )
                 NavigationBarItem(
-                    selected = selectedDestination == Screen.Profile.route,
+                    selected = currentStack.value.lastOrNull()?.destination?.route == Screen.Profile.route,
                     onClick = {
                         navController.navigate(route = Screen.Profile.route)
-                        selectedDestination = Screen.Profile.route
                     },
                     icon = {
                         Icon(
