@@ -235,7 +235,8 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                     title = {
                         Text(
                             headerTitle
-                        ) },
+                        )
+                    },
                     navigationIcon = {
                         if (currentStack.value.size > 2) {
                             IconButton(onClick = { navController.popBackStack() }) {
@@ -266,7 +267,8 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                            color = Color(0x40000000),
                            offset = DpOffset(x = 0.dp, 4.dp)
                        )
-                   )*/) },
+                   )*/)
+            },
             bottomBar = {
                 NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
                     NavigationBarItem(
@@ -277,24 +279,28 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                                     inclusive = true
                                 }
                             }
-                            selectedDestination = Screen.Groups.route },
+                            selectedDestination = Screen.Groups.route
+                        },
                         icon = {
                             Icon(
                                 Icons.Default.Groups,
                                 contentDescription = Screen.Groups.route
-                            ) },
+                            )
+                        },
                         label = { Screen.Groups.label?.let { Text(it) } }
                     )
                     NavigationBarItem(
                         selected = selectedDestination == Screen.Profile.route,
                         onClick = {
                             navController.navigate(route = Screen.Profile.route)
-                            selectedDestination = Screen.Profile.route },
+                            selectedDestination = Screen.Profile.route
+                        },
                         icon = {
                             Icon(
                                 Icons.Default.AccountCircle,
                                 contentDescription = Screen.Profile.route
-                            ) },
+                            )
+                        },
                         label = { Screen.Profile.label?.let { Text(it) } }
                     )
                 }
@@ -313,7 +319,7 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                         Screen.GroupDetails.route
                     ) { backStackEntry ->
                         val groupId = backStackEntry.arguments?.getString("groupId")
-                        groupId?.let {id ->
+                        groupId?.let { id ->
                             GroupScreen(groupId = id, navigation = navController)
                         }
                     }
@@ -325,9 +331,9 @@ fun OweSome(viewModel: NavViewModel = koinActivityViewModel(), authManager: Auth
                     composable(Screen.EditGroup.route) {
                         EditGroupScreen(navigation = navController)
                     }
-                    composable ( Screen.Profile.route ){
+                    composable(Screen.Profile.route) {
                         ProfileScreen(navigation = navController)
-
+                    }
 
                     composable(Screen.NewExpense.route) {
                         NewExpenseScreen(navigation = navController)
