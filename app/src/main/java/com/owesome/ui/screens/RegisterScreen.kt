@@ -1,5 +1,7 @@
 package com.owesome.ui.screens
 
+import android.view.Gravity
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -38,6 +41,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.owesome.R
@@ -52,10 +56,15 @@ fun RegisterScreen(
     viewModel: RegisterViewModel = koinViewModel()
 ) {
     val state = viewModel.uiState
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.onComplete.collect {
             if (it) {
+                // Provide feedback to user that registration was successful
+                Toast.makeText(context, "Registration successful!", Toast.LENGTH_LONG).show()
+
+                // Registration done, so go back to login
                 navigation.navigate(Screen.Login.route) {
                     popUpTo(Screen.Register.route) { inclusive = true }
                 }
@@ -80,12 +89,16 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = state.username,
-            onValueChange = { state.username = it },
+            onValueChange = {
+                state.username = it
+                state.usernameError = viewModel.validateUsername(it)
+            },
             label = { Text("Username") },
+            isError = state.emailError != null,
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
-        if (state.usernameError != null) {
+        state.usernameError?.let {
             Text(
                 text = state.usernameError!!,
                 color = MaterialTheme.colorScheme.error,
@@ -96,13 +109,16 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = state.email,
-            onValueChange = { state.email = it },
+            onValueChange = {
+                state.email = it
+                state.emailError = viewModel.validateEmail(it)
+            },
             label = { Text("Email") },
             isError = state.emailError != null,
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
-        if (state.emailError != null) {
+        state.emailError?.let {
             Text(
                 text = state.emailError!!,
                 color = MaterialTheme.colorScheme.error,
@@ -148,7 +164,10 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = state.password,
-            onValueChange = { state.password = it },
+            onValueChange = {
+                state.password = it
+                state.passwordError = viewModel.validatePassword(it)
+            },
             label = { Text("Password") },
             singleLine = true,
             isError = state.passwordError != null,
@@ -167,16 +186,20 @@ fun RegisterScreen(
             },
             modifier = Modifier.fillMaxWidth()
         )
-        if (state.passwordError != null) {
+        state.passwordError?.let {
             Text(
                 text = state.passwordError!!,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
         OutlinedTextField(
             value = state.confirmPassword,
-            onValueChange = { state.confirmPassword = it },
+            onValueChange = {
+                state.confirmPassword = it
+                state.confirmPasswordError = viewModel.validateConfirmPassword(state.password, it)
+            },
             label = { Text("Confirm Password") },
             singleLine = true,
             isError = state.confirmPasswordError != null,
@@ -195,14 +218,13 @@ fun RegisterScreen(
             },
             modifier = Modifier.fillMaxWidth()
         )
-        if (state.confirmPasswordError != null) {
+        state.confirmPasswordError?.let {
             Text(
                 text = state.confirmPasswordError!!,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall)
         }
 
-        Spacer(modifier =  Modifier.height(26.dp))
 
         state.errorMsg?.let {
             Text(text = it, color = MaterialTheme.colorScheme.error)

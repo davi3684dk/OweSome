@@ -75,6 +75,10 @@ class RetroFitClient(authManager: AuthManager, context: Context) {
         retrofit.create(UserApiService::class.java)
     }
 
+    val expenseAPI: ExpenseApiService by lazy {
+        retrofit.create(ExpenseApiService::class.java)
+    }
+        
     val notificationApi: NotificationApiService by lazy {
         retrofit.create(NotificationApiService::class.java)
     }

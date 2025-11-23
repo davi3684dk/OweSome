@@ -1,6 +1,7 @@
 package com.owesome.ui.screens
 
 import ads_mobile_sdk.h4
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -59,10 +61,14 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun LoginScreen(navController: NavController, viewModel: LoginViewModel = koinViewModel(), onLoginSuccess: (User) -> Unit) {
     val state = viewModel.uiState
-
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.onComplete.collect {
+            // Provide feedback to user that login was successful
+            Toast.makeText(context, "Login successful!", Toast.LENGTH_LONG).show()
+
+            // Trigger login event -> App should direct to main screen (Groups)
             onLoginSuccess(it)
         }
     }

@@ -2,26 +2,35 @@ package com.owesome
 
 import android.Manifest
 import android.content.Context
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
@@ -31,13 +40,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
@@ -50,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -62,6 +70,8 @@ import com.owesome.data.api.RegisterRequest
 import com.owesome.data.auth.AuthManager
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
+import com.owesome.data.repository.Result
+import com.owesome.data.repository.UserRepository
 import com.owesome.data.repository.NotificationRepository
 import com.owesome.di.appModule
 import com.owesome.ui.screens.CreateGroupScreen
@@ -70,10 +80,15 @@ import com.owesome.ui.screens.EditGroupScreen
 import com.owesome.ui.screens.GroupScreen
 import com.owesome.ui.screens.GroupsScreen
 import com.owesome.ui.screens.LoginScreen
+import com.owesome.ui.screens.NewExpenseScreen
 import com.owesome.ui.screens.RegisterScreen
+import com.owesome.ui.screens.ProfileScreen
+import com.owesome.ui.screens.SplashScreen
 import com.owesome.ui.theme.OweSomeTheme
 import com.owesome.ui.viewmodels.NavViewModel
+import com.owesome.util.AlertManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import okhttp3.ResponseBody
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -83,6 +98,8 @@ import org.koin.core.context.startKoin
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.math.log
+import kotlin.system.exitProcess
 
 
 class MainActivity : ComponentActivity() {
@@ -102,6 +119,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -127,12 +145,82 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 notificationFacade.listen()
             }
+            val userRepo: UserRepository = koinInject()
+            val authManager: AuthManager = koinInject()
+            val alertManager: AlertManager = koinInject()
 
-            OweSome()
+            var connected by rememberSaveable { mutableStateOf(false) }
+
+            val currentUser by authManager.currentUser.collectAsState()
+
+            val context = LocalContext.current
+
+            val alert by alertManager.alert.collectAsState()
+
+            LaunchedEffect(Unit) {
+                val user = userRepo.getUser()
+                when (user) {
+                    is Result.Success -> {
+                        if (user.value != null)
+                            authManager.setCurrentUser(user.value)
+
+                        connected = true
+                    }
+
+                    is Result.Error -> {
+                        Toast.makeText(context, user.message, Toast.LENGTH_LONG).show()
+                    }
+
+                    is Result.ConnectionError -> {
+                        alertManager.showAlert(
+                            title = "Error",
+                            message = "Could not connect to server.. Please ensure you have an internet connection or try again later",
+                            onDismiss = {
+                                exitProcess(-1)
+                            }
+                        )
+                    }
+                }
+            }
+            OweSomeTheme {
+                alert?.let {
+                    AlertDialog(
+                        onDismissRequest = {
+                            exitProcess(-1)
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    it.onDismiss()
+                                }
+                            ) {
+                                Text("OK")
+                            }
+                        },
+                        text = {
+                            Text(it.message)
+                        },
+                        title = {
+                            Text(it.title)
+                        }
+                    )
+                }
+
+                if (connected) {
+                    if (currentUser != null) {
+                        OweSome()
+                    } else {
+                        AuthNavGraph()
+                    }
+                } else {
+                    SplashScreen()
+                }
+            }
         }
     }
 }
 
+@SuppressLint("RestrictedApi")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OweSome(
@@ -144,11 +232,7 @@ fun OweSome(
 
     val headerTitle by viewModel.title.collectAsState()
 
-    LaunchedEffect(Unit) {
-        authManager.loginRequired.collect {
-            //TODO navController.navigate()
-        }
-    }
+    val currentStack = navController.currentBackStack.collectAsState()
 
     viewModel.setTitle("Test")
     val notificationFacade = koinInject<NotificationFacade>()
@@ -156,7 +240,6 @@ fun OweSome(
         darkTheme = true,
         dynamicColor = false
     ) {
-
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
@@ -164,13 +247,16 @@ fun OweSome(
                     title = {
                         Text(
                             headerTitle
-                        ) },
+                        )
+                    },
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Localized description"
-                            )
+                        if (currentStack.value.size > 2) {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Localized description"
+                                )
+                            }
                         }
                     },
                     actions = {
@@ -193,31 +279,40 @@ fun OweSome(
                            color = Color(0x40000000),
                            offset = DpOffset(x = 0.dp, 4.dp)
                        )
-                   )*/) },
+                   )*/)
+            },
             bottomBar = {
                 NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
                     NavigationBarItem(
                         selected = selectedDestination == Screen.Groups.route,
                         onClick = {
-                            navController.navigate(route = Screen.Groups.route)
-                            selectedDestination = Screen.Groups.route },
+                            navController.navigate(route = Screen.Groups.route) {
+                                popUpTo(Screen.Groups.route) {
+                                    inclusive = true
+                                }
+                            }
+                            selectedDestination = Screen.Groups.route
+                        },
                         icon = {
                             Icon(
                                 Icons.Default.Groups,
                                 contentDescription = Screen.Groups.route
-                            ) },
+                            )
+                        },
                         label = { Screen.Groups.label?.let { Text(it) } }
                     )
                     NavigationBarItem(
                         selected = selectedDestination == Screen.Profile.route,
                         onClick = {
                             navController.navigate(route = Screen.Profile.route)
-                            selectedDestination = Screen.Profile.route },
+                            selectedDestination = Screen.Profile.route
+                        },
                         icon = {
                             Icon(
                                 Icons.Default.AccountCircle,
                                 contentDescription = Screen.Profile.route
-                            ) },
+                            )
+                        },
                         label = { Screen.Profile.label?.let { Text(it) } }
                     )
                 }
@@ -226,30 +321,17 @@ fun OweSome(
             Surface(modifier = Modifier.padding(innerPadding)) {
                 NavHost(
                     navController = navController,
-                    startDestination = Screen.Login.route
+                    startDestination = Screen.Groups.route
                 ) {
-                    composable(Screen.Login.route) {
-                        LoginScreen(
-                            navController = navController,
-                            onLoginSuccess = { user ->
-                                navController.navigate(Screen.Groups.route) {
-                                    popUpTo(Screen.Login.route) { inclusive = true }
-                                }
-                            }
-                        )
-                    }
-
-                    composable(Screen.Register.route) {
-                        RegisterScreen(navigation = navController)
-                    }
                     composable(Screen.Groups.route) {
                         GroupsScreen(navigation = navController)
                     }
+
                     composable(
                         Screen.GroupDetails.route
                     ) { backStackEntry ->
                         val groupId = backStackEntry.arguments?.getString("groupId")
-                        groupId?.let {id ->
+                        groupId?.let { id ->
                             GroupScreen(groupId = id, navigation = navController)
                         }
                     }
@@ -261,12 +343,53 @@ fun OweSome(
                     composable(Screen.EditGroup.route) {
                         EditGroupScreen(navigation = navController)
                     }
+                    composable(Screen.Profile.route) {
+                        ProfileScreen(navigation = navController)
+                    }
+
+                    composable(Screen.NewExpense.route) {
+                        NewExpenseScreen(navigation = navController)
+                    }
                 }
             }
         }
     }
 }
 
+
+@Composable
+fun AuthNavGraph() {
+    val navController = rememberNavController()
+
+    OweSomeTheme(
+        darkTheme = true,
+        dynamicColor = false
+    ) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize()
+        ) { innerPadding ->
+            Surface(modifier = Modifier.padding(innerPadding)) {
+                NavHost(
+                    navController = navController,
+                    startDestination = Screen.Login.route
+                ) {
+                    composable(Screen.Login.route) {
+                        LoginScreen(
+                            navController = navController,
+                            onLoginSuccess = { user ->
+
+                            }
+                        )
+                    }
+
+                    composable(Screen.Register.route) {
+                        RegisterScreen(navigation = navController)
+                    }
+                }
+            }
+        }
+    }
+}
 
 sealed class Screen(
     val route: String,
@@ -275,10 +398,12 @@ sealed class Screen(
     object Groups : Screen("groups", "Groups")
     object Profile : Screen("profile", "Profile")
     object Settings : Screen("settings", "Settings")
+    object Notifications : Screen("notifications", "Notifications")
     object CreateGroup : Screen("createGroup", "Create Group")
     object EditGroup : Screen("editGroup", "Edit Group")
     object Login : Screen("login", "Login")
     object Register: Screen("register", "Register")
+    object NewExpense: Screen("newExpense", "New Expense")
 
     object GroupDetails : Screen("groupDetails/{groupId}", null) {
         fun createRoute(groupId: String) = "groupDetails/$groupId"
