@@ -186,7 +186,10 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-            OweSomeTheme {
+            OweSomeTheme(
+                darkTheme = true,
+                dynamicColor = false
+            ) {
                 alert?.let { a ->
                     AlertDialog(
                         onDismissRequest = {
@@ -260,132 +263,110 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OweSome(
-    viewModel: NavViewModel = koinActivityViewModel(),
-    authManager: AuthManager = koinInject(),
+    viewModel: NavViewModel = koinActivityViewModel()
 ) {
     val navController = rememberNavController()
     var selectedDestination by rememberSaveable { mutableStateOf(Screen.Groups.route) }
-
     val headerTitle by viewModel.title.collectAsState()
-
     val currentStack = navController.currentBackStack.collectAsState()
 
-    viewModel.setTitle("Test")
-    val notificationFacade = koinInject<NotificationFacade>()
-    OweSomeTheme(
-        darkTheme = true,
-        dynamicColor = false
-    ) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            headerTitle
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(headerTitle) },
+                navigationIcon = {
+                    if (currentStack.value.size > 2) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Localized description"
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    viewModel.settingsIcon?.let {
+                        IconButton(onClick = {
+                            viewModel.settingsPressed()
+                        }) {
+                            Icon(
+                                imageVector = viewModel.settingsIcon!!,
+                                contentDescription = "Localized description"
+                            )
+                        }
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
+                NavigationBarItem(
+                    selected = selectedDestination == Screen.Groups.route,
+                    onClick = {
+                        navController.navigate(route = Screen.Groups.route) {
+                            popUpTo(Screen.Groups.route) {
+                                inclusive = true
+                            }
+                        }
+                        selectedDestination = Screen.Groups.route
+                    },
+                    icon = {
+                        Icon(
+                            Icons.Default.Groups,
+                            contentDescription = Screen.Groups.route
                         )
                     },
-                    navigationIcon = {
-                        if (currentStack.value.size > 2) {
-                            IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Localized description"
-                                )
-                            }
-                        }
+                    label = { Screen.Groups.label?.let { Text(it) } }
+                )
+                NavigationBarItem(
+                    selected = selectedDestination == Screen.Profile.route,
+                    onClick = {
+                        navController.navigate(route = Screen.Profile.route)
+                        selectedDestination = Screen.Profile.route
                     },
-                    actions = {
-                        viewModel.settingsIcon?.let {
-                            IconButton(onClick = {
-                                viewModel.settingsPressed()
-                            }) {
-                                Icon(
-                                    imageVector = viewModel.settingsIcon!!,
-                                    contentDescription = "Localized description"
-                                )
-                            }
-                        }
-                    }
-                    /*modifier = Modifier.dropShadow(
-                       shape = RoundedCornerShape(0.dp),
-                       shadow = Shadow(
-                           radius = 6.dp,
-                           spread = 6.dp,
-                           color = Color(0x40000000),
-                           offset = DpOffset(x = 0.dp, 4.dp)
-                       )
-                   )*/)
-            },
-            bottomBar = {
-                NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
-                    NavigationBarItem(
-                        selected = selectedDestination == Screen.Groups.route,
-                        onClick = {
-                            navController.navigate(route = Screen.Groups.route) {
-                                popUpTo(Screen.Groups.route) {
-                                    inclusive = true
-                                }
-                            }
-                            selectedDestination = Screen.Groups.route
-                        },
-                        icon = {
-                            Icon(
-                                Icons.Default.Groups,
-                                contentDescription = Screen.Groups.route
-                            )
-                        },
-                        label = { Screen.Groups.label?.let { Text(it) } }
-                    )
-                    NavigationBarItem(
-                        selected = selectedDestination == Screen.Profile.route,
-                        onClick = {
-                            navController.navigate(route = Screen.Profile.route)
-                            selectedDestination = Screen.Profile.route
-                        },
-                        icon = {
-                            Icon(
-                                Icons.Default.AccountCircle,
-                                contentDescription = Screen.Profile.route
-                            )
-                        },
-                        label = { Screen.Profile.label?.let { Text(it) } }
-                    )
-                }
+                    icon = {
+                        Icon(
+                            Icons.Default.AccountCircle,
+                            contentDescription = Screen.Profile.route
+                        )
+                    },
+                    label = { Screen.Profile.label?.let { Text(it) } }
+                )
             }
-        ) { innerPadding ->
-            Surface(modifier = Modifier.padding(innerPadding)) {
-                NavHost(
-                    navController = navController,
-                    startDestination = Screen.Groups.route
-                ) {
-                    composable(Screen.Groups.route) {
-                        GroupsScreen(navigation = navController)
-                    }
+        }
+    ) { innerPadding ->
+        Surface(modifier = Modifier.padding(innerPadding)) {
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Groups.route
+            ) {
+                composable(Screen.Groups.route) {
+                    GroupsScreen(navigation = navController)
+                }
 
-                    composable(
-                        Screen.GroupDetails.route
-                    ) { backStackEntry ->
-                        val groupId = backStackEntry.arguments?.getString("groupId")
-                        groupId?.let { id ->
-                            GroupScreen(groupId = id, navigation = navController)
-                        }
+                composable(
+                    Screen.GroupDetails.route
+                ) { backStackEntry ->
+                    val groupId = backStackEntry.arguments?.getString("groupId")
+                    groupId?.let { id ->
+                        GroupScreen(groupId = id, navigation = navController)
                     }
+                }
 
-                    composable(Screen.CreateGroup.route) {
-                        CreateGroupScreen(navigation = navController)
-                    }
+                composable(Screen.CreateGroup.route) {
+                    CreateGroupScreen(navigation = navController)
+                }
 
-                    composable(Screen.EditGroup.route) {
-                        EditGroupScreen(navigation = navController)
-                    }
-                    composable(Screen.Profile.route) {
-                        ProfileScreen(navigation = navController)
-                    }
+                composable(Screen.EditGroup.route) {
+                    EditGroupScreen(navigation = navController)
+                }
+                composable(Screen.Profile.route) {
+                    ProfileScreen(navigation = navController)
+                }
 
-                    composable(Screen.NewExpense.route) {
-                        NewExpenseScreen(navigation = navController)
-                    }
+                composable(Screen.NewExpense.route) {
+                    NewExpenseScreen(navigation = navController)
                 }
             }
         }
@@ -397,30 +378,22 @@ fun OweSome(
 fun AuthNavGraph() {
     val navController = rememberNavController()
 
-    OweSomeTheme(
-        darkTheme = true,
-        dynamicColor = false
-    ) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize()
-        ) { innerPadding ->
-            Surface(modifier = Modifier.padding(innerPadding)) {
-                NavHost(
-                    navController = navController,
-                    startDestination = Screen.Login.route
-                ) {
-                    composable(Screen.Login.route) {
-                        LoginScreen(
-                            navController = navController,
-                            onLoginSuccess = { user ->
+    Scaffold(
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
+        Surface(modifier = Modifier.padding(innerPadding)) {
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Login.route
+            ) {
+                composable(Screen.Login.route) {
+                    LoginScreen(
+                        navController = navController,
+                    ) {}
+                }
 
-                            }
-                        )
-                    }
-
-                    composable(Screen.Register.route) {
-                        RegisterScreen(navigation = navController)
-                    }
+                composable(Screen.Register.route) {
+                    RegisterScreen(navigation = navController)
                 }
             }
         }
