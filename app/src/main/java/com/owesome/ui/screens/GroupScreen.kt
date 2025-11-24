@@ -225,15 +225,17 @@ fun GroupScreen(viewModel: GroupViewModel = koinActivityViewModel(), navViewMode
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth().padding(10.dp)
                     ) {
-                        ElevatedButton(
-                            onClick = {
-                                viewModel.settleGroup()
-                            },
-                        ) {
-                            Text(
-                                text = "Settle Up",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                        if (currentUser?.id == group.owner.id) {
+                            ElevatedButton(
+                                onClick = {
+                                    viewModel.settleGroup()
+                                },
+                            ) {
+                                Text(
+                                    text = "Settle Up",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
                         }
                         Row(
                             verticalAlignment = Alignment.CenterVertically

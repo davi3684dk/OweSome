@@ -63,7 +63,10 @@ fun NewExpenseScreen(
     LaunchedEffect(group) {
         navViewModel.setTitle(group.name)
         state.groupId = group.id.toInt()
-        expenseViewModel.onComplete.collect { navigation.popBackStack() }
+        expenseViewModel.onComplete.collect {
+            groupViewModel.setGroup(group.id)
+            navigation.popBackStack()
+        }
     }
 
     Column (

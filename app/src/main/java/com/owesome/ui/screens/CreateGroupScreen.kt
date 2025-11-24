@@ -66,7 +66,7 @@ fun CreateGroupScreen(viewModel: GroupEditorViewModel = koinInject(), navViewMod
         viewModel.uiState.isOwner = true
         navViewModel.setTitle("Start a Group")
         viewModel.onComplete.collect {
-            groupViewModel.setGroup(it) //update group of shared viewmodel before navigating
+            groupViewModel.setGroup(it.id) //update group of shared viewmodel before navigating
             groupViewModel.getAllGroups() //Update group list
             navigation.navigate(Screen.GroupDetails.createRoute(it.id)) {
                 popUpTo(Screen.Groups.route)

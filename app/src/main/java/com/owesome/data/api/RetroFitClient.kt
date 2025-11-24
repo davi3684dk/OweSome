@@ -22,6 +22,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.ConnectException
 import java.util.concurrent.TimeUnit
+import kotlin.getValue
 
 class RetroFitClient(authManager: AuthManager, context: Context) {
 
@@ -30,8 +31,6 @@ class RetroFitClient(authManager: AuthManager, context: Context) {
 
         val logging = HttpLoggingInterceptor()
         logging.setLevel(HttpLoggingInterceptor.Level.BODY)
-
-
 
         val refreshOkHttpClient = OkHttpClient.Builder()
             .retryOnConnectionFailure(false)
@@ -63,6 +62,42 @@ class RetroFitClient(authManager: AuthManager, context: Context) {
             .build()
     }
 
+    private val retrofitPoller by lazy {
+        val baseUrl = BuildConfig.BACKEND_URL
+
+        val logging = HttpLoggingInterceptor()
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+
+        val refreshOkHttpClient = OkHttpClient.Builder()
+            .retryOnConnectionFailure(false)
+            .addInterceptor(logging)
+            .addInterceptor(RefreshTokenInterceptor(authManager))
+            .addInterceptor(RetryInterceptor(1, context))
+            .build()
+
+        val refreshRetrofit = Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(refreshOkHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val refreshService = refreshRetrofit.create(AuthApiService::class.java)
+
+        val okHttpClient = OkHttpClient.Builder()
+            .retryOnConnectionFailure(false)
+            .addInterceptor(logging)
+            .addInterceptor(AccessTokenInterceptor(authManager))
+            .authenticator(TokenAuthenticator(authManager, refreshService))
+            .addInterceptor(RetryInterceptor(1, context))
+            .build()
+
+        Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
     val groupApi: GroupApiService by lazy {
         retrofit.create(GroupApiService::class.java)
     }
@@ -80,7 +115,7 @@ class RetroFitClient(authManager: AuthManager, context: Context) {
     }
         
     val notificationApi: NotificationApiService by lazy {
-        retrofit.create(NotificationApiService::class.java)
+        retrofitPoller.create(NotificationApiService::class.java)
     }
 }
 
@@ -146,9 +181,6 @@ class RetryInterceptor(private val maxRetries: Int = 3, private val context: Con
                 response = chain.proceed(request)
                 responseOk = true
             } catch (e: Exception) {
-                Thread.sleep(500L * attempt)
-                attempt++
-
                 (context as Activity).runOnUiThread {
                     Toast.makeText(
                         context,
@@ -156,6 +188,8 @@ class RetryInterceptor(private val maxRetries: Int = 3, private val context: Con
                         Toast.LENGTH_SHORT
                     ).show()
                 }
+                attempt++
+                Thread.sleep(2000L * attempt)
             }
         }
 

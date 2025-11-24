@@ -175,6 +175,10 @@ class MainActivity : ComponentActivity() {
                         Toast.makeText(context, user.message, Toast.LENGTH_LONG).show()
                     }
 
+                    is Result.UnauthorizedError -> {
+                        connected = true
+                    }
+
                     is Result.ConnectionError -> {
                         alertManager.showAlert(
                             title = "Error",

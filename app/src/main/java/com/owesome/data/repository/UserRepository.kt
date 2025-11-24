@@ -16,6 +16,7 @@ sealed class Result<out T> {
     data class Success<T>(val value: T) : Result<T>()
     data class Error(val message: String): Result<Nothing>()
     data class ConnectionError(val message: String): Result<Nothing>()
+    data class UnauthorizedError(val message: String): Result<Nothing>()
 }
 
 interface UserRepository {
@@ -116,6 +117,8 @@ class UserRepositoryImpl(
         } else {
             if (response.code() == 502) {
                 return Result.ConnectionError(response.message())
+            } else if (response.code() == 401) {
+                return Result.UnauthorizedError(response.message())
             } else {
                 return Result.Error(response.message())
             }

@@ -71,6 +71,7 @@ class GroupViewModel(
 
         viewModelScope.launch {
             repository.settleGroup(currentGroup.value.id)
+            setGroup(currentGroup.value.id)
             _isLoading.value = false
         }
     }
