@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,13 +14,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
@@ -42,13 +38,11 @@ import androidx.navigation.NavHostController
 import com.owesome.Screen
 import com.owesome.data.auth.AuthManager
 import com.owesome.ui.viewmodels.NavViewModel
-import org.koin.compose.currentKoinScope
-import org.koin.compose.getKoin
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
+import androidx.compose.runtime.collectAsState
 
 // Enable users to update their profiles and manage notification settings.
-val current_user = "Current active user"
 @Composable
 fun ProfileScreen(navigation: NavHostController) {
 
@@ -106,6 +100,11 @@ fun AccountManagementContent(navigation: NavHostController) {
     var confirmNewPassword by rememberSaveable { mutableStateOf("") }
 
     val authManager = koinInject<AuthManager>()
+
+
+    // we are not allowed to catch nullpointer exceptions from composables,
+    // so it is unhandled
+        var current_user = authManager.currentUser.collectAsState().value?.username
 
     Column (
         modifier = Modifier

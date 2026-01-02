@@ -6,13 +6,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.owesome.data.entities.Group
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class NavViewModel : ViewModel() {
@@ -25,8 +22,10 @@ class NavViewModel : ViewModel() {
     private val _settingsPressed = MutableSharedFlow<Unit>()
     val settingsPressed = _settingsPressed.asSharedFlow()
 
-    fun setTitle(title: String, settingsIcon: ImageVector? = null) {
-        _title.value = title
+    fun setTitle(title: String?, settingsIcon: ImageVector? = null) {
+        if (title != null) {
+            _title.value = title
+        }
         println("Setting title")
 
         this.settingsIcon = settingsIcon
