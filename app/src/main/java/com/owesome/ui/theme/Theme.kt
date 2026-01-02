@@ -267,8 +267,8 @@ fun OweSomeTheme(
           if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
       }
       
-      darkTheme -> darkScheme
-      else -> lightScheme
+      darkTheme -> highContrastDarkColorScheme
+      else -> highContrastLightColorScheme
   }
 
   MaterialTheme(
