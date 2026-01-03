@@ -2,8 +2,6 @@ package com.owesome.data.api
 
 import com.google.gson.annotations.SerializedName
 import com.owesome.data.api.dto.UserDTO
-import com.owesome.data.entities.UserCreate
-import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -45,4 +43,19 @@ data class LoginResponse(
     @SerializedName("refresh_token")
     val refreshToken: String,
     val user: UserDTO
+)
+data class UpdateUserPasswordRequest(
+    @SerializedName("old_password")
+    val oldPassword: String,
+    @SerializedName("new_password")
+    val newPassword: String
+)
+
+data class UpdateUserRequest(
+    @SerializedName("username")
+    val username: String,
+    @SerializedName("email")
+    val email: String,
+    @SerializedName("phone")
+    val phone: String
 )

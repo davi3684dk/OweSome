@@ -1,5 +1,6 @@
 package com.owesome.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -16,13 +17,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
@@ -43,13 +41,16 @@ import androidx.navigation.NavHostController
 import com.owesome.Screen
 import com.owesome.data.auth.AuthManager
 import com.owesome.ui.viewmodels.NavViewModel
-import org.koin.compose.currentKoinScope
-import org.koin.compose.getKoin
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
+import androidx.compose.runtime.collectAsState
+import com.owesome.data.entities.UserCreate
+import com.owesome.data.repository.UserRepositoryImpl
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+
 
 // Enable users to update their profiles and manage notification settings.
-val current_user = "Current active user"
 @Composable
 fun ProfileScreen(navigation: NavHostController) {
 
@@ -107,6 +108,13 @@ fun AccountManagementContent(navigation: NavHostController) {
     var confirmNewPassword by rememberSaveable { mutableStateOf("") }
 
     val authManager = koinInject<AuthManager>()
+    val userRepo = koinInject<UserRepositoryImpl>()
+
+
+
+    // we are not allowed to catch nullpointer exceptions from composables,
+    // so it is unhandled
+        var current_user = authManager.currentUser.collectAsState().value?.username
 
     Column (
         modifier = Modifier
@@ -156,6 +164,8 @@ fun AccountManagementContent(navigation: NavHostController) {
 
         ExtendedFloatingActionButton(
             onClick = {
+                // double check relevant fields
+                // build a request based on updated fields and call the api
                 navigation.navigate(Screen.CreateGroup.route)
             },
             icon = { Icon(Icons.Filled.Add, "Floating action button.") },
@@ -189,7 +199,39 @@ fun AccountManagementContent(navigation: NavHostController) {
         )
         ExtendedFloatingActionButton(
             onClick = {
-                // TODO send call to update in database
+                // doing all the things inside because else everything has to
+                // be passed through arguments and we are not reusing the function
+                if (newPassword == confirmNewPassword) {
+                    // TODO check if current logged in user's old password
+                    // have to do a backend call as password is not saved in the
+                    // current user state
+                    // retrieve the current user from backed using findUserByName
+                    // and using the name from current_user state
+
+                    // move scope over to viewModelScope when we have a viewModel
+                    GlobalScope.launch {
+                        var currentuser = authManager.currentUser.value!!
+
+                        var updatedSettings = UserCreate( currentuser.username,
+                            currentuser.email, currentuser.phone, newPassword)
+
+                        // output is not used as session does not include password
+                        userRepo.updateUserByID(currentuser.id, updatedSettings)
+                    }
+                    Toast.makeText(
+                        navigation.context,
+                        "Password updated successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                else {
+                        Toast.makeText(
+                            navigation.context,
+                            "New and Repeated new passwords do not match",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
             },
             icon = { Icon(Icons.Filled.Add, "Floating action button.") },
             text = { Text(text = "Update password")},
