@@ -3,6 +3,8 @@ package com.owesome.data.repository
 import com.owesome.data.api.AuthApiService
 import com.owesome.data.api.LoginRequest
 import com.owesome.data.api.RegisterRequest
+import com.owesome.data.api.UpdateUserPasswordRequest
+import com.owesome.data.api.UpdateUserRequest
 import com.owesome.data.auth.AuthManager
 import com.owesome.data.api.UserApiService
 import com.owesome.data.api.mappers.toUser
@@ -27,8 +29,8 @@ interface UserRepository {
     suspend fun logoutUser(): Boolean
     suspend fun getUser(): Result<User?>
 
-    suspend fun updateUserByID(userToUpdate : Int, updatedData: UserCreate):
-            User?
+    suspend fun updateUserPassword(userToUpdate : Int, oldPassword: String,newPassword: String):
+            Boolean
 }
 
 class UserRepositoryImpl(
@@ -97,32 +99,55 @@ class UserRepositoryImpl(
         }
     }
 
-    override suspend fun updateUserByID(
-        userToUpdate: Int,
-        updatedData: UserCreate
+    override suspend fun updateUserPassword(
+        userToUpdateid: Int,
+        oldPassword : String,
+        newPassword : String,
     ):
-            User? {
+            Boolean {
         try {
-            val response = userApiService.updateUserByID(userToUpdate, updatedData)
-            return if(
-                response != null
-            ){
-                User(
-                    id = response.id,
-                    username = response.username,
-                    email = response.email,
-                    phone = response.phone
-            )
-        }
-            else {
-            null
+            val response = userApiService.updateUserPassword (userToUpdateid,
+                 updateUserPasswordRequest = UpdateUserPasswordRequest(
+                     oldPassword = oldPassword,
+                     newPassword = newPassword
+                 ),
+                )
+            if (response.isSuccessful) {
+                return true
             }
+            else return false
         }
         catch (e: HttpException){
-            return null
+            println(e.message)
         }
 
+        return true
     }
+
+    suspend fun updateUserByID(id: Int, username: String, email: String, phone: String) : Boolean
+    {
+        try {
+            val response = userApiService.updateUserByID(id,
+                updateUserRequest = UpdateUserRequest(
+                    username = username,
+                    email = email,
+                    phone = phone
+                )
+            )
+
+            if (response.isSuccessful) {
+                return true
+            }
+
+            else return false
+        }
+        catch (e: HttpException){
+            println(e.message)
+        }
+
+        return true
+    }
+
 
     override suspend fun logoutUser(): Boolean {
         val response = authApiService.logout()
