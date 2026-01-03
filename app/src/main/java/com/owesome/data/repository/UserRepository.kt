@@ -28,7 +28,6 @@ interface UserRepository {
     suspend fun getUserIdByName(username: String): User?
     suspend fun logoutUser(): Boolean
     suspend fun getUser(): Result<User?>
-
     suspend fun updateUserPassword(userToUpdate : Int, oldPassword: String,newPassword: String):
             Boolean
 }

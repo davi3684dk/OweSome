@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -121,20 +123,23 @@ fun AccountManagementContent(navigation: NavHostController) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ){
-        Text(text = "Account Management", fontSize = 24.sp)
         val viewModel: NavViewModel = koinActivityViewModel()
         viewModel.setTitle(current_user)
+
+        Spacer(modifier =  Modifier.height(16.dp))
+        Text(text = "Account Management", fontSize = 24.sp)
+        Spacer(modifier =  Modifier.height(4.dp))
 
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Input Username") },
+            label = { Text("New Username") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Input Email") },
+            label = { Text("New Email") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
 
@@ -164,30 +169,32 @@ fun AccountManagementContent(navigation: NavHostController) {
                 navigation.navigate(Screen.CreateGroup.route)
             },
             icon = { Icon(Icons.Filled.Add, "Floating action button.") },
-            text = { Text(text = "Update account details")},
+            text = { Text(text = "Update Account Details")},
             modifier = Modifier.padding(13.dp)
         )
 
+        Spacer(modifier =  Modifier.height(16.dp))
         Text(text = "Password management", fontSize = 24.sp)
+        Spacer(modifier =  Modifier.height(4.dp))
 
         OutlinedTextField(
             value = oldPassword,
             onValueChange = { oldPassword = it },
-            label = { Text("Input old password") },
+            label = { Text("Old Password") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
 
         OutlinedTextField(
             value = newPassword,
             onValueChange = { newPassword = it },
-            label = { Text("Input new Password") },
+            label = { Text("New Password") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
 
         OutlinedTextField(
             value = confirmNewPassword,
             onValueChange = { confirmNewPassword = it },
-            label = { Text("input the new Password again") },
+            label = { Text("Confirm New Password ") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
         ExtendedFloatingActionButton(
