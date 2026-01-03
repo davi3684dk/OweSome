@@ -5,11 +5,11 @@ import com.owesome.data.api.LoginRequest
 import com.owesome.data.api.RegisterRequest
 import com.owesome.data.auth.AuthManager
 import com.owesome.data.api.UserApiService
+import com.owesome.data.api.dto.UserDTO
 import com.owesome.data.api.mappers.toUser
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
 import kotlinx.coroutines.delay
-import org.json.JSONObject
 import retrofit2.HttpException
 
 sealed class Result<out T> {
@@ -27,6 +27,8 @@ interface UserRepository {
     suspend fun getUserIdByName(username: String): User?
     suspend fun logoutUser(): Boolean
     suspend fun getUser(): Result<User?>
+
+    suspend fun updateUserByID(userToUpdate : String, updatedSettings: User): User?
 }
 
 class UserRepositoryImpl(
@@ -93,6 +95,37 @@ class UserRepositoryImpl(
         } catch (e: HttpException) {
             return null
         }
+    }
+
+    override suspend fun updateUserByID(userToUpdate : String, updatedSettings: User):
+            User? {
+        try {
+            val dto = UserDTO(
+                id = updatedSettings.id,
+                username = updatedSettings.username,
+                email = updatedSettings.email,
+                phone = updatedSettings.phone
+            )
+
+            val response = userApiService.updateUserByID(userToUpdate, dto)
+            return if(
+                response != null
+            ){
+                User(
+                    id = response.id,
+                    username = response.username,
+                    email = response.email,
+                    phone = response.phone
+            )
+        }
+            else {
+            null
+            }
+        }
+        catch (e: HttpException){
+            return null
+        }
+
     }
 
     override suspend fun logoutUser(): Boolean {
