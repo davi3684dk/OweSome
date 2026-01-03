@@ -5,7 +5,6 @@ import com.owesome.data.api.LoginRequest
 import com.owesome.data.api.RegisterRequest
 import com.owesome.data.auth.AuthManager
 import com.owesome.data.api.UserApiService
-import com.owesome.data.api.dto.UserDTO
 import com.owesome.data.api.mappers.toUser
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
@@ -28,7 +27,8 @@ interface UserRepository {
     suspend fun logoutUser(): Boolean
     suspend fun getUser(): Result<User?>
 
-    suspend fun updateUserByID(userToUpdate : String, updatedSettings: User): User?
+    suspend fun updateUserByID(userToUpdate : Int, updatedData: UserCreate):
+            User?
 }
 
 class UserRepositoryImpl(
@@ -97,17 +97,13 @@ class UserRepositoryImpl(
         }
     }
 
-    override suspend fun updateUserByID(userToUpdate : String, updatedSettings: User):
+    override suspend fun updateUserByID(
+        userToUpdate: Int,
+        updatedData: UserCreate
+    ):
             User? {
         try {
-            val dto = UserDTO(
-                id = updatedSettings.id,
-                username = updatedSettings.username,
-                email = updatedSettings.email,
-                phone = updatedSettings.phone
-            )
-
-            val response = userApiService.updateUserByID(userToUpdate, dto)
+            val response = userApiService.updateUserByID(userToUpdate, updatedData)
             return if(
                 response != null
             ){

@@ -1,6 +1,7 @@
 package com.owesome.data.api
 
 import com.owesome.data.api.dto.UserDTO
+import com.owesome.data.entities.UserCreate
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
@@ -12,8 +13,8 @@ interface UserApiService {
 
     @PATCH("/users/update/{id}")
     suspend fun updateUserByID(
-        @Path("id") id: String,
-        @Body user: UserDTO
+        @Path("id") id: Int,
+        @Body user: UserCreate
     ): UserDTO?
 }
 
