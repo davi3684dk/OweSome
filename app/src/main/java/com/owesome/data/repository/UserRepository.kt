@@ -27,6 +27,8 @@ interface UserRepository {
     suspend fun getUserIdByName(username: String): User?
     suspend fun logoutUser(): Boolean
     suspend fun getUser(): Result<User?>
+    suspend fun updateUser(user: User): Result<User?>
+    suspend fun updatePassword(password: String): Result<User?>
 }
 
 class UserRepositoryImpl(
@@ -123,5 +125,13 @@ class UserRepositoryImpl(
                 return Result.Error(response.message())
             }
         }
+    }
+
+    override suspend fun updateUser(user: User): Result<User?> {
+        return Result.Error("Not implemented yet.")
+    }
+
+    override suspend fun updatePassword(password: String): Result<User?> {
+        return Result.Error("Not implemented yet.")
     }
 }
