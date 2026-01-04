@@ -1,5 +1,6 @@
 package com.owesome.data.repository
 
+import androidx.compose.runtime.collectAsState
 import com.owesome.data.api.AuthApiService
 import com.owesome.data.api.LoginRequest
 import com.owesome.data.api.RegisterRequest
@@ -11,6 +12,7 @@ import com.owesome.data.api.mappers.toUser
 import com.owesome.data.entities.User
 import com.owesome.data.entities.UserCreate
 import kotlinx.coroutines.delay
+import org.koin.compose.koinInject
 import retrofit2.HttpException
 
 sealed class Result<out T> {
@@ -28,6 +30,7 @@ interface UserRepository {
     suspend fun getUserIdByName(username: String): User?
     suspend fun logoutUser(): Boolean
     suspend fun getUser(): Result<User?>
+    suspend fun updateUserByID(id: Int, username: String, email: String, phone: String) : Boolean
     suspend fun updateUserPassword(userToUpdate : Int, oldPassword: String,newPassword: String):
             Boolean
 }
@@ -37,7 +40,6 @@ class UserRepositoryImpl(
     val authManager: AuthManager,
     val userApiService: UserApiService
 ) : UserRepository {
-
 
     override suspend fun loginUser(
         username: String,
@@ -123,7 +125,7 @@ class UserRepositoryImpl(
         return true
     }
 
-    suspend fun updateUserByID(id: Int, username: String, email: String, phone: String) : Boolean
+    override suspend fun updateUserByID(id: Int, username: String, email: String, phone: String) : Boolean
     {
         try {
             val response = userApiService.updateUserByID(id,

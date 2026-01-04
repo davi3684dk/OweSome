@@ -17,6 +17,7 @@ import com.owesome.ui.viewmodels.AddUserViewModel
 import com.owesome.notifications.NotificationFacade
 import com.owesome.ui.viewmodels.ExpenseViewModel
 import com.owesome.ui.viewmodels.LoginViewModel
+import com.owesome.ui.viewmodels.ProfileViewModel
 import com.owesome.ui.viewmodels.RegisterViewModel
 import com.owesome.util.AlertManager
 import org.koin.android.ext.koin.androidContext
@@ -31,6 +32,7 @@ val appModule = module {
     viewModelOf(::LoginViewModel)
     viewModelOf(::RegisterViewModel)
     viewModelOf(::ExpenseViewModel)
+    viewModelOf(::ProfileViewModel)
     singleOf(::AuthManager)
     singleOf(::RetroFitClient)
     singleOf(::AlertManager)
@@ -46,5 +48,6 @@ val appModule = module {
     single { get<RetroFitClient>().expenseAPI }
     single { get<RetroFitClient>().notificationApi }
     viewModel { NavViewModel() }
+    viewModel { ProfileViewModel(userRepo = get(), authManager = get())}
     singleOf(::NotificationFacade)
 }

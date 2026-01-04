@@ -1,16 +1,19 @@
 package com.owesome.ui.viewmodels
 
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.owesome.data.auth.AuthManager
 import com.owesome.data.entities.User
 import com.owesome.data.repository.UserRepository
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 class ProfileUiState {
     var username by mutableStateOf("")
@@ -32,8 +35,11 @@ class ProfileUiState {
 }
 
 class ProfileViewModel(
-    private val userRepo: UserRepository
+    private val userRepo: UserRepository,
+    private val authManager: AuthManager
 ): ViewModel() {
+
+    var currentUser = authManager.currentUser
 
     var uiState by mutableStateOf(ProfileUiState())
         private set
@@ -51,22 +57,20 @@ class ProfileViewModel(
         if (uiState.usernameError == null && uiState.emailError == null) {
             // Validation check complete, update account details
             viewModelScope.launch {
-                val result = userRepo.updateUser(
-                    user = User(
-                        1, //How do i get user id the best way?
-                        uiState.username,
-                        uiState.email,
-                        uiState.phoneNumber
-                    )
+                val isSuccessful = userRepo.updateUserByID(
+                    currentUser.value!!.id,
+                    (uiState.username).orIfNullOrBlank { currentUser.value!!.username },
+                    (uiState.email).orIfNullOrBlank { currentUser.value!!.email },
+                    (uiState.phonePrefix + uiState.phoneNumber).orIfNullOrBlank { currentUser.value!!.phone },
                 )
 
                 // Validate that request was succesful and send to screen
-                /*if (result) {
+                if (isSuccessful) {
                     _onUpdateDetails.send(true)
                 }
                 else {
-                    uiState.errorMsg = "Account Update Failed: $(result.Error)"
-                }*/
+                    uiState.errorMsg = "Account Update Failed: API Error"
+                }
             }
         }
     }
@@ -77,21 +81,29 @@ class ProfileViewModel(
 
         if (uiState.newPasswordError == null && uiState.confirmNewPasswordError == null) {
             // Validation check complete, update password
-            // TODO: Validate if input old password is correct
-
             viewModelScope.launch {
-                // TODO: Call API to change password
+                val isSuccessful = userRepo.updateUserPassword(
+                    currentUser.value!!.id,
+                    uiState.oldPassword,
+                    uiState.newPassword
+                )
 
+                // Validate that request was succesful and send to screen
+                if (isSuccessful) {
+                    _onUpdatePassword.send(true)
+                }
+                else {
+                    uiState.errorMsg = "Password Update Failed: API Error"
+                }
             }
-        }
+        } else {uiState.errorMsg = "New passwords do not match."}
     }
 
     // Helper functions for validation.
     fun validateUsername(username: String): String? {
         val usernameRegex = "^[A-Za-z0-9_-]{4,16}$"
         return when {
-            username.isBlank() -> "New username cannot be empty"
-            !Regex(usernameRegex).matches(username) -> "New username must be between 4-16 characters and only include normal letters A-Z, numbers, dashes (-) and underscores (_)"
+            (!Regex(usernameRegex).matches(username) && username.isNotEmpty()) -> "New username must be between 4-16 characters and only include normal letters A-Z, numbers, dashes (-) and underscores (_)"
             else -> null
         }
     }
@@ -99,8 +111,7 @@ class ProfileViewModel(
     fun validateEmail(email: String): String? {
         val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
         return when {
-            email.isBlank() -> "New email cannot be empty"
-            !Regex(emailRegex).matches(email) -> "Invalid email"
+            (!Regex(emailRegex).matches(email) && email.isNotEmpty()) -> "Invalid email"
             else -> null
         }
     }
@@ -122,4 +133,7 @@ class ProfileViewModel(
             else -> null
         }
     }
+
+
+    inline fun String?.orIfNullOrBlank(fallback: () -> String): String = if (this.isNullOrBlank()) fallback() else this
 }
