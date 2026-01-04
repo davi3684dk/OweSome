@@ -20,11 +20,16 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
 
 private val formatter = DateTimeFormatterBuilder()
-    .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-    .appendOffset("+HH:MM", "+00:00")
+    .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+    .optionalStart()
+    .appendFraction(ChronoField.NANO_OF_SECOND, 1, 9, true)
+    .optionalEnd()
+    .appendOffsetId()
     .toFormatter()
+
 
 fun CompactGroupDTO.toCompactGroup(): GroupCompact {
     return GroupCompact(

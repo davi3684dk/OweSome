@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +29,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,10 +45,13 @@ import com.owesome.ui.viewmodels.NavViewModel
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
 import com.owesome.data.entities.UserCreate
 import com.owesome.data.repository.UserRepositoryImpl
+import com.owesome.ui.viewmodels.ProfileViewModel
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.koin.compose.viewmodel.koinViewModel
 
 
 // Enable users to update their profiles and manage notification settings.
@@ -96,47 +102,82 @@ fun ProfileScreen(navigation: NavHostController) {
 }
 
 @Composable
-fun AccountManagementContent(navigation: NavHostController) {
-    var username by rememberSaveable { mutableStateOf("") }
-    var email by rememberSaveable { mutableStateOf("") }
-    var phonePrefix by rememberSaveable { mutableStateOf("") }
-    var phoneNumber by rememberSaveable { mutableStateOf("") }
-    var oldPassword by rememberSaveable { mutableStateOf("") }
-    var newPassword by rememberSaveable { mutableStateOf("") }
-    var confirmNewPassword by rememberSaveable { mutableStateOf("") }
+fun AccountManagementContent(
+    navigation: NavHostController,
+    viewModel: ProfileViewModel = koinViewModel()
+) {
+    val state = viewModel.uiState
+    val context = LocalContext.current
 
     val authManager = koinInject<AuthManager>()
     val userRepo = koinInject<UserRepositoryImpl>()
 
+    LaunchedEffect(Unit) {
+        // Provide feedback on successful update
+        viewModel.onUpdateDetails.collect {
+            if (it) {
+                Toast.makeText(context, "Updated account successfully", Toast.LENGTH_LONG).show()
+            }
+        }
 
+        viewModel.onUpdatePassword.collect {
+            if (it) {
+                Toast.makeText(context, "Updated password successfully", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     // we are not allowed to catch nullpointer exceptions from composables,
     // so it is unhandled
-        var current_user = authManager.currentUser.collectAsState().value?.username
+    var current_user = authManager.currentUser.collectAsState().value?.username
 
     Column (
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ){
+        val navModel: NavViewModel = koinActivityViewModel()
+        navModel.setTitle(current_user)
+
+        Spacer(modifier =  Modifier.height(16.dp))
         Text(text = "Account Management", fontSize = 24.sp)
-        val viewModel: NavViewModel = koinActivityViewModel()
-        viewModel.setTitle(current_user)
+        Spacer(modifier =  Modifier.height(4.dp))
 
         OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Input Username") },
+            value = state.username,
+            onValueChange = {
+                state.username = it
+                state.usernameError = viewModel.validateUsername(it) },
+            label = { Text("New Username") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
+        state.usernameError?.let {
+            Text(
+                text = state.usernameError!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall)
+        }
+
+        Spacer(modifier =  Modifier.height(16.dp))
+
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Input Email") },
+            value = state.email,
+            onValueChange = {
+                state.email = it
+                state.emailError = viewModel.validateEmail(it) },
+            label = { Text("New Email") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
+        state.emailError?.let {
+            Text(
+                text = state.emailError!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall)
+        }
+
+        Spacer(modifier =  Modifier.height(16.dp))
 
         Row (
             modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
@@ -144,14 +185,14 @@ fun AccountManagementContent(navigation: NavHostController) {
             verticalAlignment = Alignment.CenterVertically
         ){
             OutlinedTextField(
-                value = phonePrefix,
-                onValueChange = { phonePrefix = it },
+                value = state.phonePrefix,
+                onValueChange = { state.phonePrefix = it },
                 label = { Text("Prefix") },
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
             OutlinedTextField(
-                value = phoneNumber,
-                onValueChange = { phoneNumber = it },
+                value = state.phoneNumber,
+                onValueChange = { state.phoneNumber = it },
                 label = { Text("Phone Number") },
                 modifier = Modifier.weight(3f).fillMaxHeight()
             )
@@ -161,75 +202,62 @@ fun AccountManagementContent(navigation: NavHostController) {
             onClick = {
                 // double check relevant fields
                 // build a request based on updated fields and call the api
-                navigation.navigate(Screen.CreateGroup.route)
+                viewModel.changeAccontDetails()
             },
             icon = { Icon(Icons.Filled.Add, "Floating action button.") },
-            text = { Text(text = "Update account details")},
+            text = { Text(text = "Update Account Details")},
             modifier = Modifier.padding(13.dp)
         )
 
+        Spacer(modifier =  Modifier.height(16.dp))
         Text(text = "Password management", fontSize = 24.sp)
+        Spacer(modifier =  Modifier.height(4.dp))
 
         OutlinedTextField(
-            value = oldPassword,
-            onValueChange = { oldPassword = it },
-            label = { Text("Input old password") },
+            value = state.oldPassword,
+            onValueChange = { state.oldPassword = it },
+            label = { Text("Old Password") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
 
-        OutlinedTextField(
-            value = newPassword,
-            onValueChange = { newPassword = it },
-            label = { Text("Input new Password") },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-        )
+        Spacer(modifier =  Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = confirmNewPassword,
-            onValueChange = { confirmNewPassword = it },
-            label = { Text("input the new Password again") },
+            value = state.newPassword,
+            onValueChange = {
+                state.newPassword = it
+                state.newPasswordError = viewModel.validateNewPassword(it) },
+            label = { Text("New Password") },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        )
+        state.newPasswordError?.let {
+            Text(
+                text = state.newPasswordError!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        Spacer(modifier =  Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = state.confirmNewPassword,
+            onValueChange = {
+                state.confirmNewPassword = it
+                state.confirmNewPasswordError = viewModel.validateConfirmNewPassword(state.newPassword, it)},
+            label = { Text("Confirm New Password ") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
         ExtendedFloatingActionButton(
             onClick = {
-                // doing all the things inside because else everything has to
-                // be passed through arguments and we are not reusing the function
-                if (newPassword == confirmNewPassword) {
-                    // TODO check if current logged in user's old password
-                    // have to do a backend call as password is not saved in the
-                    // current user state
-                    // retrieve the current user from backed using findUserByName
-                    // and using the name from current_user state
-
-                    // move scope over to viewModelScope when we have a viewModel
-                    GlobalScope.launch {
-                        var currentuser = authManager.currentUser.value!!
-
-                        var updatedSettings = UserCreate( currentuser.username,
-                            currentuser.email, currentuser.phone, newPassword)
-
-                        // output is not used as session does not include password
-                        userRepo.updateUserByID(currentuser.id, updatedSettings)
-                    }
-                    Toast.makeText(
-                        navigation.context,
-                        "Password updated successfully",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                else {
-                        Toast.makeText(
-                            navigation.context,
-                            "New and Repeated new passwords do not match",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-
+                viewModel.changePassword()
             },
             icon = { Icon(Icons.Filled.Add, "Floating action button.") },
             text = { Text(text = "Update password")},
             modifier = Modifier.padding(13.dp)
         )
+
+        Spacer(modifier =  Modifier.height(16.dp))
 
         TextButton(
             onClick = {
